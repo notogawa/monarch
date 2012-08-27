@@ -1,7 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
--- | This module makes TokyoTyrant binary protocol monadic.
+-- | This module provide TokyoTyrant monadic access interface.
 --
---   <http://fallabs.com/tokyotyrant/spex.html#protocol>
+--   TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>) is implemented.
 module Database.Monarch
     (
       Monarch, runMonarch
@@ -57,7 +57,7 @@ instance Error Code
 class BitFlag32 a where
     fromOption :: a -> Int32
 
--- | Scripting extension options
+-- | Options for scripting extension
 data ExtOption = RecordLocking -- ^ record locking
                | GlobalLocking -- ^ global locking
 
@@ -65,13 +65,13 @@ instance BitFlag32 ExtOption where
     fromOption RecordLocking = 0x1
     fromOption GlobalLocking = 0x2
 
--- | Restore options
+-- | Options for restore
 data RestoreOption = ConsistencyChecking -- ^ consistency checking
 
 instance BitFlag32 RestoreOption where
     fromOption ConsistencyChecking = 0x1
 
--- | Miscellaneous operation options
+-- | Options for miscellaneous operation
 data MiscOption = NoUpdateLog -- ^ omission of update log
 
 instance BitFlag32 MiscOption where
@@ -187,7 +187,7 @@ communicate makeRequest makeResponse =
     responseCode >>=
     makeResponse
 
--- | Store a record into a remote database object.
+-- | Store a record.
 --   If a record with the same key exists in the database,
 --   it is overwritten.
 put :: BS.ByteString -- ^ key
@@ -204,7 +204,7 @@ put key value = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Store a new record into a remote database object.
+-- | Store a new record.
 --   If a record with the same key exists in the database,
 --   this function has no effect.
 putKeep :: BS.ByteString -- ^ key
@@ -222,7 +222,7 @@ putKeep key value = communicate request response
       response InvalidOperation = return ()
       response code = throwError code
 
--- | Concatenate a value at the end of the existing record in a remote database object.
+-- | Concatenate a value at the end of the existing record.
 --   If there is no corresponding record, a new record is created.
 putCat :: BS.ByteString -- ^ key
        -> BS.ByteString -- ^ value
@@ -256,7 +256,7 @@ putShiftLeft key value width = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Store a record into a remote database object without response from the server.
+-- | Store a record without response.
 --   If a record with the same key exists in the database, it is overwritten.
 putNoResponse :: BS.ByteString -- ^ key
               -> BS.ByteString -- ^ value
@@ -270,7 +270,7 @@ putNoResponse key value = yieldRequest request
         putByteString key
         putByteString value
 
--- | Remove a record of a remote database object.
+-- | Remove a record.
 out :: BS.ByteString -- ^ key
     -> Monarch ()
 out key = communicate request response
@@ -283,7 +283,7 @@ out key = communicate request response
       response InvalidOperation = return ()
       response code = throwError code
 
--- | Retrieve a record in a remote database object.
+-- | Retrieve a record.
 get :: BS.ByteString -- ^ key
     -> Monarch (Maybe BS.ByteString)
 get key = communicate request response
@@ -296,7 +296,7 @@ get key = communicate request response
       response InvalidOperation = return Nothing
       response code = throwError code
 
--- | Retrieve records in a remote database object.
+-- | Retrieve records.
 multipleGet :: [BS.ByteString] -- ^ keys
             -> Monarch [(BS.ByteString, BS.ByteString)]
 multipleGet keys = communicate request response
@@ -312,7 +312,7 @@ multipleGet keys = communicate request response
           sequence $ Prelude.replicate siz parseKeyValue
       response code = throwError code
 
--- | Get the size of the value of a record in a remote database object.
+-- | Get the size of the value of a record.
 valueSize :: BS.ByteString -- ^ key
           -> Monarch (Maybe Int)
 valueSize key = communicate request response
@@ -325,8 +325,7 @@ valueSize key = communicate request response
       response InvalidOperation = return Nothing
       response code = throwError code
 
--- | Initialize the iterator of a remote database object.
---   The iterator is used in order to access the key of every record stored in a database.
+-- | Initialize the iterator.
 iterInit :: Monarch ()
 iterInit = communicate request response
     where
@@ -334,7 +333,7 @@ iterInit = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Get the next key of the iterator of a remote database object.
+-- | Get the next key of the iterator.
 --   The iterator can be updated by multiple connections and then it is not assured that every record is traversed.
 iterNext :: Monarch (Maybe BS.ByteString)
 iterNext = communicate request response
@@ -344,7 +343,7 @@ iterNext = communicate request response
       response InvalidOperation = return Nothing
       response code = throwError code
 
--- | Get forward matching keys in a remote database object.
+-- | Get forward matching keys.
 forwardMatchingKeys :: BS.ByteString -- ^ key prefix
                     -> Int -- ^ maximum number of keys to be fetched
                     -> Monarch [BS.ByteString]
@@ -360,7 +359,7 @@ forwardMatchingKeys prefix n = communicate request response
         sequence $ Prelude.replicate siz parseBS
       response code = throwError code
 
--- | Add an integer to a record in a remote database object.
+-- | Add an integer to a record.
 --   If the corresponding record exists, the value is treated as an integer and is added to.
 --   If no record corresponds, a new record of the additional value is stored.
 addInt :: BS.ByteString -- ^ key
@@ -376,7 +375,7 @@ addInt key n = communicate request response
       response Success = fromIntegral <$> parseWord32
       response code = throwError code
 
--- | Add a real number to a record in a remote database object.
+-- | Add a real number to a record.
 --   If the corresponding record exists, the value is treated as a real number and is added to.
 --   If no record corresponds, a new record of the additional value is stored.
 addDouble :: BS.ByteString -- ^ key
@@ -413,7 +412,7 @@ ext func opts key value = communicate request response
       response Success = parseBS
       response code = throwError code
 
--- | Synchronize updated contents of a remote database object with the file and the device.
+-- | Synchronize updated contents with the file and the device.
 sync :: Monarch ()
 sync = communicate request response
     where
@@ -421,7 +420,7 @@ sync = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Optimize the storage of a remove database object.
+-- | Optimize the storage.
 optimize :: BS.ByteString -- ^ parameter
          -> Monarch ()
 optimize param = communicate request response
@@ -433,7 +432,7 @@ optimize param = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Remove all records of a remote database object.
+-- | Remove all records.
 vanish :: Monarch ()
 vanish = communicate request response
     where
@@ -441,7 +440,7 @@ vanish = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Copy the database file of a remote database object.
+-- | Copy the database file.
 copy :: BS.ByteString -- ^ path
      -> Monarch ()
 copy path = communicate request response
@@ -453,7 +452,7 @@ copy path = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Restore the database file of a remote database object from the update log.
+-- | Restore the database file from the update log.
 restore :: Integral a =>
            BS.ByteString -- ^ path
         -> a -- ^ beginning time stamp in microseconds
@@ -470,7 +469,7 @@ restore path usec opts = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Set the replication master of a remote database object.
+-- | Set the replication master.
 setMaster :: Integral a =>
              BS.ByteString -- ^ host
           -> Int -- ^ port
@@ -489,7 +488,7 @@ setMaster host port usec opts = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Get the number of records of a remote database object.
+-- | Get the number of records.
 recordNum :: Monarch Int64
 recordNum = communicate request response
     where
@@ -497,7 +496,7 @@ recordNum = communicate request response
       response Success = parseInt64
       response code = throwError code
 
--- | Get the size of the database of a remote database object.
+-- | Get the size of the database.
 size :: Monarch Int64
 size = communicate request response
     where
@@ -505,7 +504,7 @@ size = communicate request response
       response Success = parseInt64
       response code = throwError code
 
--- | Get the status string of the database of a remote database object.
+-- | Get the status string of the database.
 status :: Monarch BS.ByteString
 status = communicate request response
     where
@@ -513,7 +512,7 @@ status = communicate request response
       response Success = parseBS
       response code = throwError code
 
--- | Call a versatile function for miscellaneous operations of a remote database object.
+-- | Call a versatile function for miscellaneous operations.
 misc :: BS.ByteString -- ^ function name
      -> [MiscOption] -- ^ option flags
      -> [BS.ByteString] -- ^ arguments
