@@ -23,7 +23,8 @@ import Data.Binary.Put (runPut, putWord32be)
 import Data.Binary.Get (runGet, getWord32be)
 import Control.Applicative
 import Control.Monad.Error
-import Database.Monarch.Types
+
+import Database.Monarch.Raw
 
 class BitFlag32 a where
     fromOption :: a -> Int32

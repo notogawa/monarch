@@ -12,7 +12,7 @@ import Data.Binary.Put (putWord32be, putByteString, putLazyByteString)
 import Control.Applicative
 import Control.Monad.Error
 
-import Database.Monarch.Types
+import Database.Monarch.Raw
 import Database.Monarch.Utils
 
 -- | Store a record.

@@ -3,9 +3,9 @@
 --
 module Database.Monarch
     (
-      module Database.Monarch.Types
+      module Database.Monarch.Raw
     , module Database.Monarch.Binary
     ) where
 
-import Database.Monarch.Types hiding (liftMonarch)
+import Database.Monarch.Raw hiding (liftMonarch)
 import Database.Monarch.Binary

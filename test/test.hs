@@ -53,13 +53,20 @@ returns :: (Eq a, Show a) =>
            Monarch a
         -> Either Code a
         -> IO ()
-action `returns` expected = do
-  result <- runMonarch "localhost" 1978 $ do
-              vanish
-              result <- action
-              vanish
-              return result
-  result @?= expected
+action `returns` expected = connTest >> poolTest
+  where
+  connTest = do result <- withMonarchConn "localhost" 1978 $ runMonarchConn $ do
+                            vanish
+                            result <- action
+                            vanish
+                            return result
+                result @?= expected
+  poolTest = do result <- withMonarchPool "localhost" 1978 20 $ runMonarchPool $ do
+                            vanish
+                            result <- action
+                            vanish
+                            return result
+                result @?= expected
 
 casePutRecord :: Assertion
 casePutRecord =
