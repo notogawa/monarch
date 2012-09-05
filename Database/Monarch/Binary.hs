@@ -184,14 +184,14 @@ iterNext = communicate request response
 
 -- | Get forward matching keys.
 forwardMatchingKeys :: ByteString -- ^ key prefix
-                    -> Int -- ^ maximum number of keys to be fetched
+                    -> Maybe Int -- ^ maximum number of keys to be fetched. 'Nothing' means unlimited.
                     -> Monarch [ByteString]
 forwardMatchingKeys prefix n = communicate request response
     where
       request = do
         putMagic 0x58
         putWord32be $ lengthBS32 prefix
-        putWord32be $ fromIntegral n
+        putWord32be $ fromIntegral (maybe (-1) id n)
         putByteString prefix
       response Success = do
         siz <- fromIntegral <$> parseWord32

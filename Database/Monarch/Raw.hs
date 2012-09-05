@@ -25,10 +25,10 @@ import Control.Applicative
 import Control.Monad.Trans.Control
 import Network.Socket
 
--- | Connection to TokyoTyrant
+-- | Connection with TokyoTyrant
 data Connection = Connection { connection :: Socket }
 
--- | Connection pool
+-- | Connection pool with TokyoTyrant
 type ConnectionPool = Pool Connection
 
 -- | Error code
@@ -82,22 +82,20 @@ client action result src sink = src $$ conduit =$ sink
                 liftIO . writeIORef result
 
 -- | Create a TokyoTyrant connection and run the given action.
--- Note that you should not use the given 'Connection'
--- outside the action since it may be already been released.
+-- Don't use the given 'Connection' outside the action.
 withMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
                    String
                 -> Int
                 -> (Connection -> m a)
                 -> m a
-withMonarchConn host port f = bracket open' close' f
+withMonarchConn host port f =
+    bracket open' close' f
     where
       open' = liftIO (Connection <$> getSocket host port)
       close' = liftIO . sClose . connection
 
 -- | Create a TokyoTyrant connection pool and run the given action.
--- The pool is properly released after the action finishes using it.
--- Note that you should not use the given 'ConnectionPool'
--- outside the action since it may be already been released.
+-- Don't use the given 'ConnectionPool' outside the action.
 withMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
                    String
                 -> Int

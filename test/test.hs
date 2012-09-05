@@ -254,7 +254,7 @@ caseFwmkeys =
         put "abra" "cadabra"
         put "abrac" "adabra"
         put "abraca" "dabra"
-        sort <$> forwardMatchingKeys "abra" 2
+        sort <$> forwardMatchingKeys "abra" (Just 2)
 
 casePutMsgPackRecord :: Assertion
 casePutMsgPackRecord =
