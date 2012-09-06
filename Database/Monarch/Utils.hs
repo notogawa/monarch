@@ -14,15 +14,12 @@ module Database.Monarch.Utils
 
 import Data.Int
 import Data.Bits
-import Data.Conduit
-import qualified Data.Conduit.Binary as CB
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Binary as B
 import Data.Binary.Put (runPut, putWord32be)
 import Data.Binary.Get (runGet, getWord32be)
 import Control.Applicative
-import Control.Monad.Error
 
 import Database.Monarch.Raw
 
@@ -71,30 +68,23 @@ fromLBS :: LBS.ByteString -> BS.ByteString
 fromLBS = BS.pack . LBS.unpack
 
 yieldRequest :: B.Put -> Monarch ()
-yieldRequest =
-    liftMonarch . mapM_ yield . LBS.toChunks . runPut
+yieldRequest = sendLBS . runPut
 
 responseCode :: Monarch Code
-responseCode =
-    liftMonarch CB.head >>=
-    maybe (throwError MiscellaneousError)
-          (return . toCode . fromIntegral)
+responseCode = toCode . fromIntegral . runGet B.getWord8 <$> recvLBS 1
 
 parseLBS :: Monarch LBS.ByteString
-parseLBS = liftMonarch $
-           CB.take 4 >>=
-           CB.take . fromIntegral . runGet getWord32be
+parseLBS = recvLBS 4 >>=
+           recvLBS . fromIntegral . runGet getWord32be
 
 parseBS :: Monarch BS.ByteString
 parseBS = fromLBS <$> parseLBS
 
 parseWord32 :: Monarch B.Word32
-parseWord32 = liftMonarch (CB.take 4) >>=
-              return . runGet getWord32be
+parseWord32 = runGet getWord32be <$> recvLBS 4
 
 parseInt64 :: Monarch Int64
-parseInt64 = liftMonarch (CB.take 8) >>=
-             return . runGet (B.get :: B.Get Int64)
+parseInt64 = runGet (B.get :: B.Get Int64) <$> recvLBS 8
 
 parseDouble :: Monarch Double
 parseDouble = do
@@ -103,15 +93,14 @@ parseDouble = do
   return $ integ + fract * 1e-12
 
 parseKeyValue :: Monarch (BS.ByteString, BS.ByteString)
-parseKeyValue =
-    liftMonarch $ do
-      ksiz <- CB.take 4
-      vsiz <- CB.take 4
-      key <- CB.take . fromIntegral $
-             runGet getWord32be ksiz
-      value <- CB.take . fromIntegral $
-               runGet getWord32be vsiz
-      return (fromLBS key, fromLBS value)
+parseKeyValue = do
+  ksiz <- recvLBS 4
+  vsiz <- recvLBS 4
+  key <- recvLBS . fromIntegral $
+         runGet getWord32be ksiz
+  value <- recvLBS . fromIntegral $
+           runGet getWord32be vsiz
+  return (fromLBS key, fromLBS value)
 
 communicate :: B.Put
             -> (Code -> Monarch a)

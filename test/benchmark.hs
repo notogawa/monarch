@@ -3,7 +3,6 @@ import Database.Monarch
 
 import qualified Database.TokyoTyrant.FFI as FFI
 import Control.Monad
-import Control.Monad.IO.Class
 import Data.ByteString.Char8 ()
 
 main :: IO ()
@@ -21,8 +20,7 @@ ffi = do
 monarch :: IO ()
 monarch = do
   withMonarchConn "localhost" 1978 $ runMonarchConn $ do
-         forM_ [1..1000::Int] $ \n -> do
-            liftIO $ print n
+         forM_ [1..1000::Int] $ \_ -> do
             put "foo" "bar"
             get "foo"
             return ()

@@ -7,5 +7,5 @@ module Database.Monarch
     , module Database.Monarch.Binary
     ) where
 
-import Database.Monarch.Raw hiding (liftMonarch)
+import Database.Monarch.Raw hiding (sendLBS, recvLBS)
 import Database.Monarch.Binary
