@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Database.Monarch.Utils
     (
       toCode
@@ -20,6 +21,8 @@ import qualified Data.Binary as B
 import Data.Binary.Put (runPut, putWord32be)
 import Data.Binary.Get (runGet, getWord32be)
 import Control.Applicative
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Control
 
 import Database.Monarch.Raw
 
@@ -67,32 +70,32 @@ lengthLBS32 = fromIntegral . LBS.length
 fromLBS :: LBS.ByteString -> BS.ByteString
 fromLBS = BS.pack . LBS.unpack
 
-yieldRequest :: B.Put -> Monarch ()
+yieldRequest :: (MonadBaseControl IO m, MonadIO m) => B.Put -> MonarchT m ()
 yieldRequest = sendLBS . runPut
 
-responseCode :: Monarch Code
+responseCode :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Code
 responseCode = toCode . fromIntegral . runGet B.getWord8 <$> recvLBS 1
 
-parseLBS :: Monarch LBS.ByteString
+parseLBS :: (MonadBaseControl IO m, MonadIO m) => MonarchT m LBS.ByteString
 parseLBS = recvLBS 4 >>=
            recvLBS . fromIntegral . runGet getWord32be
 
-parseBS :: Monarch BS.ByteString
+parseBS :: (MonadBaseControl IO m, MonadIO m) => MonarchT m BS.ByteString
 parseBS = fromLBS <$> parseLBS
 
-parseWord32 :: Monarch B.Word32
+parseWord32 :: (MonadBaseControl IO m, MonadIO m) => MonarchT m B.Word32
 parseWord32 = runGet getWord32be <$> recvLBS 4
 
-parseInt64 :: Monarch Int64
+parseInt64 :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Int64
 parseInt64 = runGet (B.get :: B.Get Int64) <$> recvLBS 8
 
-parseDouble :: Monarch Double
+parseDouble :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Double
 parseDouble = do
   integ <- fromIntegral <$> parseInt64
   fract <- fromIntegral <$> parseInt64
   return $ integ + fract * 1e-12
 
-parseKeyValue :: Monarch (BS.ByteString, BS.ByteString)
+parseKeyValue :: (MonadBaseControl IO m, MonadIO m) => MonarchT m (BS.ByteString, BS.ByteString)
 parseKeyValue = do
   ksiz <- recvLBS 4
   vsiz <- recvLBS 4
@@ -102,9 +105,10 @@ parseKeyValue = do
            runGet getWord32be vsiz
   return (fromLBS key, fromLBS value)
 
-communicate :: B.Put
-            -> (Code -> Monarch a)
-            -> Monarch a
+communicate :: (MonadBaseControl IO m, MonadIO m) =>
+               B.Put
+            -> (Code -> MonarchT m a)
+            -> MonarchT m a
 communicate makeRequest makeResponse =
     yieldRequest makeRequest >>
     responseCode >>=

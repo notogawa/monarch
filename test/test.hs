@@ -50,7 +50,7 @@ main = hspec $ do
            it "store a record" casePutNrMsgPackRecord
 
 returns :: (Eq a, Show a) =>
-           Monarch a
+           MonarchT IO a
         -> Either Code a
         -> IO ()
 action `returns` expected = connTest >> poolTest

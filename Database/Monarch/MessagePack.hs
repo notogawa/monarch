@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- | Store/Retrieve a MessagePackable record.
 module Database.Monarch.MessagePack
      (
@@ -11,6 +12,7 @@ import Data.ByteString
 import Data.Binary.Put (putWord32be, putByteString, putLazyByteString)
 import Control.Applicative
 import Control.Monad.Error
+import Control.Monad.Trans.Control
 
 import Database.Monarch.Raw
 import Database.Monarch.Utils
@@ -18,10 +20,10 @@ import Database.Monarch.Utils
 -- | Store a record.
 --   If a record with the same key exists in the database,
 --   it is overwritten.
-put :: MsgPack.Packable a =>
+put :: (MonadBaseControl IO m, MonadIO m, MsgPack.Packable a) =>
        ByteString -- ^ key
     -> a -- ^ value
-    -> Monarch ()
+    -> MonarchT m ()
 put key value = communicate request response
     where
       msg = MsgPack.pack value
@@ -37,10 +39,10 @@ put key value = communicate request response
 -- | Store a new record.
 --   If a record with the same key exists in the database,
 --   this function has no effect.
-putKeep :: MsgPack.Packable a =>
+putKeep :: (MonadBaseControl IO m, MonadIO m, MsgPack.Packable a) =>
            ByteString -- ^ key
         -> a -- ^ value
-        -> Monarch ()
+        -> MonarchT m ()
 putKeep key value = communicate request response
     where
       msg = MsgPack.pack value
@@ -56,10 +58,10 @@ putKeep key value = communicate request response
 
 -- | Store a record without response.
 --   If a record with the same key exists in the database, it is overwritten.
-putNoResponse :: MsgPack.Packable a =>
+putNoResponse :: (MonadBaseControl IO m, MonadIO m, MsgPack.Packable a) =>
                  ByteString -- ^ key
               -> a -- ^ value
-              -> Monarch ()
+              -> MonarchT m ()
 putNoResponse key value = yieldRequest request
     where
       msg = MsgPack.pack value
@@ -71,9 +73,9 @@ putNoResponse key value = yieldRequest request
         putLazyByteString msg
 
 -- | Retrieve a record.
-get :: MsgPack.Unpackable a =>
+get :: (MonadBaseControl IO m, MonadIO m, MsgPack.Unpackable a) =>
        ByteString -- ^ key
-    -> Monarch (Maybe a)
+    -> MonarchT m (Maybe a)
 get key = communicate request response
     where
       request = do

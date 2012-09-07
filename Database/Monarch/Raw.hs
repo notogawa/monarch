@@ -1,11 +1,13 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 -- | Raw definitions.
 module Database.Monarch.Raw
     (
-      Monarch
+      Monarch, MonarchT
     , Connection, ConnectionPool
     , withMonarchConn
     , withMonarchPool
@@ -59,24 +61,33 @@ data RestoreOption = ConsistencyChecking -- ^ consistency checking
 -- | Options for miscellaneous operation
 data MiscOption = NoUpdateLog -- ^ omission of update log
 
--- | A monad supporting TokyoTyrant access.
-newtype Monarch a =
-    Monarch { unMonarch :: ErrorT Code (ReaderT Connection IO) a }
+-- | The Monarch monad transformer to provide TokyoTyrant access.
+newtype MonarchT m a =
+    MonarchT { unMonarchT :: ErrorT Code (ReaderT Connection m) a }
     deriving ( Functor, Applicative, Monad, MonadIO
-             , MonadReader Connection, MonadError Code, MonadBase IO )
+             , MonadReader Connection, MonadError Code, MonadBase base )
 
-instance MonadBaseControl IO Monarch where
-    newtype StM Monarch a = StMM { unStMM :: StM (ErrorT Code (ReaderT Connection IO)) a }
-    liftBaseWith f = Monarch . liftBaseWith $ \runInBase -> f $ liftM StMM . runInBase . unMonarch
-    restoreM = Monarch . restoreM . unStMM
+instance MonadTrans MonarchT where
+    lift = MonarchT . lift . lift
+
+instance MonadTransControl MonarchT where
+    newtype StT MonarchT a = StMonarch { unStMonarch :: Either Code a }
+    liftWith f = MonarchT . ErrorT . ReaderT $ (\r -> liftM Right (f $ \t -> liftM StMonarch (runReaderT (runErrorT (unMonarchT t)) r)))
+    restoreT = MonarchT . ErrorT . ReaderT . const .liftM unStMonarch
+
+instance MonadBaseControl base m => MonadBaseControl base (MonarchT m) where
+    newtype StM (MonarchT m) a = StMMonarchT { unStMMonarchT :: ComposeSt MonarchT m a }
+    liftBaseWith = defaultLiftBaseWith StMMonarchT
+    restoreM = defaultRestoreM unStMMonarchT
+
+type Monarch = MonarchT IO
 
 -- | Run Monarch with TokyoTyrant at target host and port.
 runMonarch :: MonadIO m =>
               Connection
-           -> Monarch a
+           -> MonarchT m a
            -> m (Either Code a)
-runMonarch conn action =
-    liftIO $ runReaderT (runErrorT $ unMonarch action) conn
+runMonarch conn action = runReaderT (runErrorT $ unMonarchT action) conn
 
 -- | Create a TokyoTyrant connection and run the given action.
 -- Don't use the given 'Connection' outside the action.
@@ -107,27 +118,27 @@ withMonarchPool host port size f =
 
 -- | Run action with a connection.
 runMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
-                  Monarch a
+                  MonarchT m a
                -> Connection
                -> m (Either Code a)
 runMonarchConn action conn = runMonarch conn action
 
 -- | Run action with a unused connection from the pool.
 runMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
-                  Monarch a
+                  MonarchT m a
                -> ConnectionPool
                -> m (Either Code a)
 runMonarchPool action pool = withResource pool (\conn -> runMonarch conn action)
 
-throwError' :: Code -> SomeException -> Monarch a
+throwError' :: (Monad m) => Code -> SomeException -> MonarchT m a
 throwError' e _ = throwError e
 
-sendLBS :: LBS.ByteString -> Monarch ()
+sendLBS :: (MonadBaseControl IO m, MonadIO m) => LBS.ByteString -> MonarchT m ()
 sendLBS lbs = do
   conn <- connection <$> ask
   liftIO (NSLBS.sendAll conn lbs) `E.catch` throwError' SendError
 
-recvLBS :: Int64 -> Monarch LBS.ByteString
+recvLBS :: (MonadBaseControl IO m, MonadIO m) => Int64 -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
   lbs <- liftIO (NSLBS.recv conn n) `E.catch` throwError' SendError

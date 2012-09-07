@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 -- | TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>).
 module Database.Monarch.Binary
     (
@@ -22,6 +23,7 @@ import Data.Binary.Put (putWord32be, putByteString)
 import Data.ByteString hiding (length, copy)
 import Control.Applicative
 import Control.Monad.Error
+import Control.Monad.Trans.Control
 
 import Database.Monarch.Raw
 import Database.Monarch.Utils
@@ -29,9 +31,10 @@ import Database.Monarch.Utils
 -- | Store a record.
 --   If a record with the same key exists in the database,
 --   it is overwritten.
-put :: ByteString -- ^ key
+put :: (MonadBaseControl IO m, MonadIO m) =>
+       ByteString -- ^ key
     -> ByteString -- ^ value
-    -> Monarch ()
+    -> MonarchT m ()
 put key value = communicate request response
     where
       request = do
@@ -46,9 +49,10 @@ put key value = communicate request response
 -- | Store a new record.
 --   If a record with the same key exists in the database,
 --   this function has no effect.
-putKeep :: ByteString -- ^ key
+putKeep :: (MonadBaseControl IO m, MonadIO m) =>
+           ByteString -- ^ key
         -> ByteString -- ^ value
-        -> Monarch ()
+        -> MonarchT m ()
 putKeep key value = communicate request response
     where
       request = do
@@ -63,9 +67,10 @@ putKeep key value = communicate request response
 
 -- | Concatenate a value at the end of the existing record.
 --   If there is no corresponding record, a new record is created.
-putCat :: ByteString -- ^ key
+putCat :: (MonadBaseControl IO m, MonadIO m) =>
+          ByteString -- ^ key
        -> ByteString -- ^ value
-       -> Monarch ()
+       -> MonarchT m ()
 putCat key value = communicate request response
     where
       request = do
@@ -79,10 +84,11 @@ putCat key value = communicate request response
 
 -- | Concatenate a value at the end of the existing record and shift it to the left.
 --   If there is no corresponding record, a new record is created.
-putShiftLeft :: ByteString -- ^ key
+putShiftLeft :: (MonadBaseControl IO m, MonadIO m) =>
+                ByteString -- ^ key
              -> ByteString -- ^ value
              -> Int  -- ^ width
-             -> Monarch ()
+             -> MonarchT m ()
 putShiftLeft key value width = communicate request response
     where
       request = do
@@ -97,9 +103,10 @@ putShiftLeft key value width = communicate request response
 
 -- | Store a record without response.
 --   If a record with the same key exists in the database, it is overwritten.
-putNoResponse :: ByteString -- ^ key
+putNoResponse :: (MonadBaseControl IO m, MonadIO m) =>
+                 ByteString -- ^ key
               -> ByteString -- ^ value
-              -> Monarch ()
+              -> MonarchT m ()
 putNoResponse key value = yieldRequest request
     where
       request = do
@@ -110,8 +117,9 @@ putNoResponse key value = yieldRequest request
         putByteString value
 
 -- | Remove a record.
-out :: ByteString -- ^ key
-    -> Monarch ()
+out :: (MonadBaseControl IO m, MonadIO m) =>
+       ByteString -- ^ key
+    -> MonarchT m ()
 out key = communicate request response
     where
       request = do
@@ -123,8 +131,9 @@ out key = communicate request response
       response code = throwError code
 
 -- | Retrieve a record.
-get :: ByteString -- ^ key
-    -> Monarch (Maybe ByteString)
+get :: (MonadBaseControl IO m, MonadIO m) =>
+       ByteString -- ^ key
+    -> MonarchT m (Maybe ByteString)
 get key = communicate request response
     where
       request = do
@@ -136,8 +145,9 @@ get key = communicate request response
       response code = throwError code
 
 -- | Retrieve records.
-multipleGet :: [ByteString] -- ^ keys
-            -> Monarch [(ByteString, ByteString)]
+multipleGet :: (MonadBaseControl IO m, MonadIO m) =>
+               [ByteString] -- ^ keys
+            -> MonarchT m [(ByteString, ByteString)]
 multipleGet keys = communicate request response
     where
       request = do
@@ -152,8 +162,9 @@ multipleGet keys = communicate request response
       response code = throwError code
 
 -- | Get the size of the value of a record.
-valueSize :: ByteString -- ^ key
-          -> Monarch (Maybe Int)
+valueSize :: (MonadBaseControl IO m, MonadIO m) =>
+             ByteString -- ^ key
+          -> MonarchT m (Maybe Int)
 valueSize key = communicate request response
     where
       request = do
@@ -165,7 +176,8 @@ valueSize key = communicate request response
       response code = throwError code
 
 -- | Initialize the iterator.
-iterInit :: Monarch ()
+iterInit :: (MonadBaseControl IO m, MonadIO m) =>
+            MonarchT m ()
 iterInit = communicate request response
     where
       request = putMagic 0x50
@@ -174,7 +186,8 @@ iterInit = communicate request response
 
 -- | Get the next key of the iterator.
 --   The iterator can be updated by multiple connections and then it is not assured that every record is traversed.
-iterNext :: Monarch (Maybe ByteString)
+iterNext :: (MonadBaseControl IO m, MonadIO m) =>
+            MonarchT m (Maybe ByteString)
 iterNext = communicate request response
     where
       request = putMagic 0x51
@@ -183,9 +196,10 @@ iterNext = communicate request response
       response code = throwError code
 
 -- | Get forward matching keys.
-forwardMatchingKeys :: ByteString -- ^ key prefix
+forwardMatchingKeys :: (MonadBaseControl IO m, MonadIO m) =>
+                       ByteString -- ^ key prefix
                     -> Maybe Int -- ^ maximum number of keys to be fetched. 'Nothing' means unlimited.
-                    -> Monarch [ByteString]
+                    -> MonarchT m [ByteString]
 forwardMatchingKeys prefix n = communicate request response
     where
       request = do
@@ -201,9 +215,10 @@ forwardMatchingKeys prefix n = communicate request response
 -- | Add an integer to a record.
 --   If the corresponding record exists, the value is treated as an integer and is added to.
 --   If no record corresponds, a new record of the additional value is stored.
-addInt :: ByteString -- ^ key
+addInt :: (MonadBaseControl IO m, MonadIO m) =>
+          ByteString -- ^ key
        -> Int -- ^ value
-       -> Monarch Int
+       -> MonarchT m Int
 addInt key n = communicate request response
     where
       request = do
@@ -217,9 +232,10 @@ addInt key n = communicate request response
 -- | Add a real number to a record.
 --   If the corresponding record exists, the value is treated as a real number and is added to.
 --   If no record corresponds, a new record of the additional value is stored.
-addDouble :: ByteString -- ^ key
+addDouble :: (MonadBaseControl IO m, MonadIO m) =>
+             ByteString -- ^ key
           -> Double -- ^ value
-          -> Monarch Double
+          -> MonarchT m Double
 addDouble key n = communicate request response
     where
       request = do
@@ -232,11 +248,12 @@ addDouble key n = communicate request response
       response code = throwError code
 
 -- | Call a function of the script language extension.
-ext :: ByteString -- ^ function
+ext :: (MonadBaseControl IO m, MonadIO m) =>
+       ByteString -- ^ function
     -> [ExtOption] -- ^ option flags
     -> ByteString -- ^ key
     -> ByteString -- ^ value
-    -> Monarch ByteString
+    -> MonarchT m ByteString
 ext func opts key value = communicate request response
     where
       request = do
@@ -252,7 +269,8 @@ ext func opts key value = communicate request response
       response code = throwError code
 
 -- | Synchronize updated contents with the file and the device.
-sync :: Monarch ()
+sync :: (MonadBaseControl IO m, MonadIO m) =>
+        MonarchT m ()
 sync = communicate request response
     where
       request = putMagic 0x70
@@ -260,8 +278,9 @@ sync = communicate request response
       response code = throwError code
 
 -- | Optimize the storage.
-optimize :: ByteString -- ^ parameter
-         -> Monarch ()
+optimize :: (MonadBaseControl IO m, MonadIO m) =>
+            ByteString -- ^ parameter
+         -> MonarchT m ()
 optimize param = communicate request response
     where
       request = do
@@ -272,7 +291,8 @@ optimize param = communicate request response
       response code = throwError code
 
 -- | Remove all records.
-vanish :: Monarch ()
+vanish :: (MonadBaseControl IO m, MonadIO m) =>
+          MonarchT m ()
 vanish = communicate request response
     where
       request = putMagic 0x72
@@ -280,8 +300,9 @@ vanish = communicate request response
       response code = throwError code
 
 -- | Copy the database file.
-copy :: ByteString -- ^ path
-     -> Monarch ()
+copy :: (MonadBaseControl IO m, MonadIO m) =>
+        ByteString -- ^ path
+     -> MonarchT m ()
 copy path = communicate request response
     where
       request = do
@@ -292,11 +313,11 @@ copy path = communicate request response
       response code = throwError code
 
 -- | Restore the database file from the update log.
-restore :: Integral a =>
+restore :: (MonadBaseControl IO m, MonadIO m, Integral a) =>
            ByteString -- ^ path
         -> a -- ^ beginning time stamp in microseconds
         -> [RestoreOption] -- ^ option flags
-        -> Monarch ()
+        -> MonarchT m ()
 restore path usec opts = communicate request response
     where
       request = do
@@ -309,12 +330,12 @@ restore path usec opts = communicate request response
       response code = throwError code
 
 -- | Set the replication master.
-setMaster :: Integral a =>
+setMaster :: (MonadBaseControl IO m, MonadIO m, Integral a) =>
              ByteString -- ^ host
           -> Int -- ^ port
           -> a -- ^ beginning time stamp in microseconds
           -> [RestoreOption] -- ^ option flags
-          -> Monarch ()
+          -> MonarchT m ()
 setMaster host port usec opts = communicate request response
     where
       request = do
@@ -328,7 +349,8 @@ setMaster host port usec opts = communicate request response
       response code = throwError code
 
 -- | Get the number of records.
-recordNum :: Monarch Int64
+recordNum :: (MonadBaseControl IO m, MonadIO m) =>
+             MonarchT m Int64
 recordNum = communicate request response
     where
       request = putMagic 0x80
@@ -336,7 +358,8 @@ recordNum = communicate request response
       response code = throwError code
 
 -- | Get the size of the database.
-size :: Monarch Int64
+size :: (MonadBaseControl IO m, MonadIO m) =>
+        MonarchT m Int64
 size = communicate request response
     where
       request = putMagic 0x81
@@ -344,7 +367,8 @@ size = communicate request response
       response code = throwError code
 
 -- | Get the status string of the database.
-status :: Monarch ByteString
+status :: (MonadBaseControl IO m, MonadIO m) =>
+          MonarchT m ByteString
 status = communicate request response
     where
       request = putMagic 0x88
@@ -352,10 +376,11 @@ status = communicate request response
       response code = throwError code
 
 -- | Call a versatile function for miscellaneous operations.
-misc :: ByteString -- ^ function name
+misc :: (MonadBaseControl IO m, MonadIO m) =>
+        ByteString -- ^ function name
      -> [MiscOption] -- ^ option flags
      -> [ByteString] -- ^ arguments
-     -> Monarch [ByteString]
+     -> MonarchT m [ByteString]
 misc func opts args = communicate request response
   where
     request = do
