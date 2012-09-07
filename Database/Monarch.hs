@@ -3,8 +3,27 @@
 --
 module Database.Monarch
     (
-      module Database.Monarch.Raw
-    , module Database.Monarch.Binary
+      Monarch, MonarchT
+    , Connection, ConnectionPool
+    , withMonarchConn
+    , withMonarchPool
+    , runMonarchConn
+    , runMonarchPool
+    , ExtOption(..), RestoreOption(..), MiscOption(..)
+    , Code(..)
+    , put, putKeep, putCat, putShiftLeft
+    , putNoResponse
+    , out
+    , get, multipleGet
+    , valueSize
+    , iterInit, iterNext
+    , forwardMatchingKeys
+    , addInt, addDouble
+    , ext, sync, optimize, vanish, copy, restore
+    , setMaster
+    , recordNum, size
+    , status
+    , misc
     ) where
 
 import Database.Monarch.Raw hiding (sendLBS, recvLBS)

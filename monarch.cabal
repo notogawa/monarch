@@ -13,10 +13,10 @@ homepage:            https://github.com/notogawa/monarch
 
 library
   exposed-modules:     Database.Monarch
-                     , Database.Monarch.Raw
-                     , Database.Monarch.Binary
                      , Database.Monarch.MessagePack
   other-modules:       Database.Monarch.Utils
+                     , Database.Monarch.Raw
+                     , Database.Monarch.Binary
   ghc-options:         -Wall
   build-depends:       base ==4.*
                      , mtl ==2.1.*
