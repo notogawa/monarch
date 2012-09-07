@@ -141,7 +141,7 @@ sendLBS lbs = do
 recvLBS :: (MonadBaseControl IO m, MonadIO m) => Int64 -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
-  lbs <- liftIO (NSLBS.recv conn n) `E.catch` throwError' SendError
+  lbs <- liftIO (NSLBS.recv conn n) `E.catch` throwError' ReceiveError
   if n /= LBS.length lbs
     then throwError ReceiveError
     else return lbs
