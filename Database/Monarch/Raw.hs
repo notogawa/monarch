@@ -73,7 +73,7 @@ instance MonadTrans MonarchT where
 instance MonadTransControl MonarchT where
     newtype StT MonarchT a = StMonarch { unStMonarch :: Either Code a }
     liftWith f = MonarchT . ErrorT . ReaderT $ (\r -> liftM Right (f $ \t -> liftM StMonarch (runReaderT (runErrorT (unMonarchT t)) r)))
-    restoreT = MonarchT . ErrorT . ReaderT . const .liftM unStMonarch
+    restoreT = MonarchT . ErrorT . ReaderT . const . liftM unStMonarch
 
 instance MonadBaseControl base m => MonadBaseControl base (MonarchT m) where
     newtype StM (MonarchT m) a = StMMonarchT { unStMMonarchT :: ComposeSt MonarchT m a }
@@ -92,8 +92,8 @@ runMonarch conn action = runReaderT (runErrorT $ unMonarchT action) conn
 -- | Create a TokyoTyrant connection and run the given action.
 -- Don't use the given 'Connection' outside the action.
 withMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
-                   String
-                -> Int
+                   String -- ^ host
+                -> Int -- ^ port
                 -> (Connection -> m a)
                 -> m a
 withMonarchConn host port f =
@@ -105,9 +105,9 @@ withMonarchConn host port f =
 -- | Create a TokyoTyrant connection pool and run the given action.
 -- Don't use the given 'ConnectionPool' outside the action.
 withMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
-                   String
-                -> Int
-                -> Int
+                   String -- ^ host
+                -> Int -- ^ port
+                -> Int -- ^ number of connections
                 -> (ConnectionPool -> m a)
                 -> m a
 withMonarchPool host port size f =
@@ -118,15 +118,15 @@ withMonarchPool host port size f =
 
 -- | Run action with a connection.
 runMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
-                  MonarchT m a
-               -> Connection
+                  MonarchT m a -- ^ action
+               -> Connection -- ^ connection
                -> m (Either Code a)
 runMonarchConn action conn = runMonarch conn action
 
 -- | Run action with a unused connection from the pool.
 runMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
-                  MonarchT m a
-               -> ConnectionPool
+                  MonarchT m a -- ^ action
+               -> ConnectionPool -- ^ connection pool
                -> m (Either Code a)
 runMonarchPool action pool = withResource pool (\conn -> runMonarch conn action)
 
