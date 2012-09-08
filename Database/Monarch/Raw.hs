@@ -18,10 +18,10 @@ module Database.Monarch.Raw
     , sendLBS, recvLBS
     ) where
 
+import Prelude hiding (catch)
 import Data.Int
-import Data.Conduit.Network
 import Data.Conduit.Pool
-import Control.Exception.Lifted as E
+import Control.Exception.Lifted
 import Control.Monad.Error
 import Control.Monad.Reader
 import Control.Monad.Base
@@ -97,9 +97,9 @@ withMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
                 -> (Connection -> m a)
                 -> m a
 withMonarchConn host port f =
-    E.bracket open' close' f
+    bracket open' close' f
     where
-      open' = liftIO (Connection <$> getSocket host port)
+      open' = liftIO $ getConnection host port
       close' = liftIO . sClose . connection
 
 -- | Create a TokyoTyrant connection pool and run the given action.
@@ -113,7 +113,7 @@ withMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
 withMonarchPool host port size f =
     liftIO (createPool open' close' 1 20 size) >>= f
     where
-      open' = Connection <$> getSocket host port
+      open' = getConnection host port
       close' = sClose . connection
 
 -- | Run action with a connection.
@@ -136,12 +136,23 @@ throwError' e _ = throwError e
 sendLBS :: (MonadBaseControl IO m, MonadIO m) => LBS.ByteString -> MonarchT m ()
 sendLBS lbs = do
   conn <- connection <$> ask
-  liftIO (NSLBS.sendAll conn lbs) `E.catch` throwError' SendError
+  liftIO (NSLBS.sendAll conn lbs) `catch` throwError' SendError
 
 recvLBS :: (MonadBaseControl IO m, MonadIO m) => Int64 -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
-  lbs <- liftIO (NSLBS.recv conn n) `E.catch` throwError' ReceiveError
+  lbs <- liftIO (NSLBS.recv conn n) `catch` throwError' ReceiveError
   if n /= LBS.length lbs
     then throwError ReceiveError
     else return lbs
+
+getConnection :: HostName -> Int -> IO Connection
+getConnection host port = do
+  let hints = defaultHints { addrFlags = [AI_ADDRCONFIG]
+                           , addrSocketType = Stream
+                           }
+  (addr:_) <- getAddrInfo (Just hints) (Just host) (Just $ show port)
+  sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+  let failConnect = (\e -> sClose sock >> throwIO e) :: SomeException -> IO ()
+  connect sock (addrAddress addr) `catch` failConnect
+  return $ Connection sock

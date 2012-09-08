@@ -1,5 +1,5 @@
 name:                monarch
-version:             0.7.0.0
+version:             0.7.0.1
 synopsis:            Monadic interface for TokyoTyrant.
 description:         This package provides simple monadic interface for TokyoTyrant.
 license:             BSD3
@@ -22,7 +22,6 @@ library
                      , mtl ==2.1.*
                      , transformers ==0.3.*
                      , bytestring ==0.9.*
-                     , network-conduit ==0.5.*
                      , binary ==0.5.*
                      , msgpack ==0.7.*
                      , transformers ==0.3.*
@@ -40,7 +39,6 @@ test-suite specs
                      , mtl ==2.1.*
                      , transformers ==0.3.*
                      , bytestring ==0.9.*
-                     , network-conduit ==0.5.*
                      , binary ==0.5.*
                      , msgpack ==0.7.*
                      , network ==2.3.*
@@ -61,7 +59,6 @@ test-suite benchmark
                      , bytestring ==0.9.*
                      , binary ==0.5.*
                      , network ==2.3.*
-                     , network-conduit ==0.5.*
                      , pool-conduit ==0.1.*
                      , monad-control ==0.3.*
                      , lifted-base ==0.1.*
