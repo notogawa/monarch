@@ -10,6 +10,7 @@ category:            Database
 build-type:          Simple
 cabal-version:       >=1.8
 homepage:            https://github.com/notogawa/monarch
+tested-with:         GHC ==7.4.2
 
 library
   exposed-modules:     Database.Monarch
