@@ -60,8 +60,7 @@ toCode _ = error "Invalid Code"
 -- >>> fromLBS (runPut $ putMagic 0x10) == "\xC8\x10"
 -- True
 --
-putMagic :: B.Word8
-         -> B.Put
+putMagic :: B.Word8 -> B.Put
 putMagic magic = B.putWord8 0xC8 >> B.putWord8 magic
 
 -- | Option
@@ -123,32 +122,49 @@ lengthLBS32 = fromIntegral . LBS.length
 fromLBS :: LBS.ByteString -> BS.ByteString
 fromLBS = BS.pack . LBS.unpack
 
-yieldRequest :: (MonadBaseControl IO m, MonadIO m) => B.Put -> MonarchT m ()
+yieldRequest :: ( MonadBaseControl IO m
+                , MonadIO m ) =>
+                B.Put
+             -> MonarchT m ()
 yieldRequest = sendLBS . runPut
 
-responseCode :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Code
+responseCode :: ( MonadBaseControl IO m
+                , MonadIO m ) =>
+                MonarchT m Code
 responseCode = toCode . fromIntegral . runGet B.getWord8 <$> recvLBS 1
 
-parseLBS :: (MonadBaseControl IO m, MonadIO m) => MonarchT m LBS.ByteString
+parseLBS :: ( MonadBaseControl IO m
+            , MonadIO m ) =>
+            MonarchT m LBS.ByteString
 parseLBS = recvLBS 4 >>=
            recvLBS . fromIntegral . runGet getWord32be
 
-parseBS :: (MonadBaseControl IO m, MonadIO m) => MonarchT m BS.ByteString
+parseBS :: ( MonadBaseControl IO m
+           , MonadIO m ) =>
+           MonarchT m BS.ByteString
 parseBS = fromLBS <$> parseLBS
 
-parseWord32 :: (MonadBaseControl IO m, MonadIO m) => MonarchT m B.Word32
+parseWord32 :: ( MonadBaseControl IO m
+               , MonadIO m ) =>
+               MonarchT m B.Word32
 parseWord32 = runGet getWord32be <$> recvLBS 4
 
-parseInt64 :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Int64
+parseInt64 :: ( MonadBaseControl IO m
+              , MonadIO m ) =>
+              MonarchT m Int64
 parseInt64 = runGet (B.get :: B.Get Int64) <$> recvLBS 8
 
-parseDouble :: (MonadBaseControl IO m, MonadIO m) => MonarchT m Double
+parseDouble :: ( MonadBaseControl IO m
+               , MonadIO m ) =>
+               MonarchT m Double
 parseDouble = do
   integ <- fromIntegral <$> parseInt64
   fract <- fromIntegral <$> parseInt64
   return $ integ + fract * 1e-12
 
-parseKeyValue :: (MonadBaseControl IO m, MonadIO m) => MonarchT m (BS.ByteString, BS.ByteString)
+parseKeyValue :: ( MonadBaseControl IO m
+                 , MonadIO m ) =>
+                 MonarchT m (BS.ByteString, BS.ByteString)
 parseKeyValue = do
   ksiz <- recvLBS 4
   vsiz <- recvLBS 4
@@ -158,7 +174,8 @@ parseKeyValue = do
            runGet getWord32be vsiz
   return (fromLBS key, fromLBS value)
 
-communicate :: (MonadBaseControl IO m, MonadIO m) =>
+communicate :: ( MonadBaseControl IO m
+               , MonadIO m) =>
                B.Put
             -> (Code -> MonarchT m a)
             -> MonarchT m a
