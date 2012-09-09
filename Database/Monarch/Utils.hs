@@ -51,22 +51,75 @@ toCode 7 = NoRecordFound
 toCode 9999 = MiscellaneousError
 toCode _ = error "Invalid Code"
 
+-- | TokyoTyrant Original Binary Protocal magic id.
+--
+-- Example:
+--
+-- >>> :m +Data.ByteString.Char8
+-- >>> :set -XOverloadedStrings
+-- >>> fromLBS (runPut $ putMagic 0x10) == "\xC8\x10"
+-- True
+--
 putMagic :: B.Word8
          -> B.Put
 putMagic magic = B.putWord8 0xC8 >> B.putWord8 magic
 
+-- | Option
+--
+-- Example:
+--
+-- >>> :m +Data.ByteString.Char8
+-- >>> :set -XOverloadedStrings
+-- >>> fromLBS (runPut $ putOptions [RecordLocking]) == "\0\0\0\1"
+-- True
+-- >>> fromLBS (runPut $ putOptions [GlobalLocking]) == "\0\0\0\2"
+-- True
+-- >>> fromLBS (runPut $ putOptions [RecordLocking, GlobalLocking]) == "\0\0\0\3"
+-- True
+--
 putOptions :: BitFlag32 option =>
               [option]
            -> B.Put
 putOptions = putWord32be . fromIntegral .
              foldl (.|.) 0 . map fromOption
 
+-- | Get Length
+--
+-- Example:
+--
+-- >>> :m +Data.ByteString.Char8
+-- >>> :set -XOverloadedStrings
+-- >>> lengthBS32 "test"
+-- 4
+-- >>> lengthBS32 ""
+-- 0
+--
 lengthBS32 :: BS.ByteString -> B.Word32
 lengthBS32 = fromIntegral . BS.length
 
+-- | Get Length
+--
+-- Example:
+--
+-- >>> :m +Data.ByteString.Lazy.Char8
+-- >>> :set -XOverloadedStrings
+-- >>> lengthLBS32 "test"
+-- 4
+-- >>> lengthLBS32 ""
+-- 0
+--
 lengthLBS32 :: LBS.ByteString -> B.Word32
 lengthLBS32 = fromIntegral . LBS.length
 
+-- | Convert
+--
+-- Example:
+--
+-- >>> :m +Data.ByteString.Lazy.Char8
+-- >>> :set -XOverloadedStrings
+-- >>> fromLBS "test"
+-- "test"
+--
 fromLBS :: LBS.ByteString -> BS.ByteString
 fromLBS = BS.pack . LBS.unpack
 

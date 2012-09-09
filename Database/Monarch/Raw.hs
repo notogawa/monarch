@@ -87,7 +87,8 @@ runMonarch :: MonadIO m =>
               Connection
            -> MonarchT m a
            -> m (Either Code a)
-runMonarch conn action = runReaderT (runErrorT $ unMonarchT action) conn
+runMonarch conn action =
+    runReaderT (runErrorT $ unMonarchT action) conn
 
 -- | Create a TokyoTyrant connection and run the given action.
 -- Don't use the given 'Connection' outside the action.
@@ -128,17 +129,25 @@ runMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
                   MonarchT m a -- ^ action
                -> ConnectionPool -- ^ connection pool
                -> m (Either Code a)
-runMonarchPool action pool = withResource pool (\conn -> runMonarch conn action)
+runMonarchPool action pool =
+    withResource pool (\conn -> runMonarch conn action)
 
-throwError' :: (Monad m) => Code -> SomeException -> MonarchT m a
+throwError' :: (Monad m) =>
+               Code
+            -> SomeException
+            -> MonarchT m a
 throwError' e _ = throwError e
 
-sendLBS :: (MonadBaseControl IO m, MonadIO m) => LBS.ByteString -> MonarchT m ()
+sendLBS :: (MonadBaseControl IO m, MonadIO m) =>
+           LBS.ByteString
+        -> MonarchT m ()
 sendLBS lbs = do
   conn <- connection <$> ask
   liftIO (NSLBS.sendAll conn lbs) `catch` throwError' SendError
 
-recvLBS :: (MonadBaseControl IO m, MonadIO m) => Int64 -> MonarchT m LBS.ByteString
+recvLBS :: (MonadBaseControl IO m, MonadIO m) =>
+           Int64
+        -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
   lbs <- liftIO (NSLBS.recv conn n) `catch` throwError' ReceiveError
@@ -146,9 +155,11 @@ recvLBS n = do
     then throwError ReceiveError
     else return lbs
 
-getConnection :: HostName -> Int -> IO Connection
+getConnection :: HostName
+              -> Int
+              -> IO Connection
 getConnection host port = do
-  let hints = defaultHints { addrFlags = [AI_ADDRCONFIG]
+  let hints = defaultHints { addrFlags = [ AI_ADDRCONFIG ]
                            , addrSocketType = Stream
                            }
   (addr:_) <- getAddrInfo (Just hints) (Just host) (Just $ show port)
