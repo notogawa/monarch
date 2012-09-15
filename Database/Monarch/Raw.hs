@@ -28,7 +28,7 @@ import Control.Monad.Base
 import Control.Applicative
 import Control.Monad.Trans.Control
 import Network.Socket
-import qualified Network.Socket.ByteString.Lazy as NSLBS
+import qualified Network.Socket.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy as LBS
 
 -- | Connection with TokyoTyrant
@@ -147,7 +147,7 @@ sendLBS :: ( MonadBaseControl IO m
         -> MonarchT m ()
 sendLBS lbs = do
   conn <- connection <$> ask
-  liftIO (NSLBS.sendAll conn lbs) `catch` throwError' SendError
+  liftIO (LBS.sendAll conn lbs) `catch` throwError' SendError
 
 recvLBS :: ( MonadBaseControl IO m
            , MonadIO m ) =>
@@ -155,7 +155,7 @@ recvLBS :: ( MonadBaseControl IO m
         -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
-  lbs <- liftIO (NSLBS.recv conn n) `catch` throwError' ReceiveError
+  lbs <- liftIO (LBS.recv conn n) `catch` throwError' ReceiveError
   if n /= LBS.length lbs
     then throwError ReceiveError
     else return lbs
