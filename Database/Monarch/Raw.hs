@@ -28,7 +28,7 @@ import Control.Monad.Base
 import Control.Applicative
 import Control.Monad.Trans.Control
 import Network.Socket
-import qualified Network.Socket.ByteString.Lazy as NSLBS
+import qualified Network.Socket.ByteString.Lazy as LBS
 import qualified Data.ByteString.Lazy as LBS
 
 -- | Connection with TokyoTyrant
@@ -92,20 +92,21 @@ runMonarch conn action =
 
 -- | Create a TokyoTyrant connection and run the given action.
 -- Don't use the given 'Connection' outside the action.
-withMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
+withMonarchConn :: ( MonadBaseControl IO m
+                   , MonadIO m ) =>
                    String -- ^ host
                 -> Int -- ^ port
                 -> (Connection -> m a)
                 -> m a
-withMonarchConn host port f =
-    bracket open' close' f
+withMonarchConn host port = bracket open' close'
     where
       open' = liftIO $ getConnection host port
       close' = liftIO . sClose . connection
 
 -- | Create a TokyoTyrant connection pool and run the given action.
 -- Don't use the given 'ConnectionPool' outside the action.
-withMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
+withMonarchPool :: ( MonadBaseControl IO m
+                   , MonadIO m ) =>
                    String -- ^ host
                 -> Int -- ^ port
                 -> Int -- ^ number of connections
@@ -118,39 +119,43 @@ withMonarchPool host port size f =
       close' = sClose . connection
 
 -- | Run action with a connection.
-runMonarchConn :: (MonadBaseControl IO m, MonadIO m) =>
+runMonarchConn :: ( MonadBaseControl IO m
+                  , MonadIO m ) =>
                   MonarchT m a -- ^ action
                -> Connection -- ^ connection
                -> m (Either Code a)
 runMonarchConn action conn = runMonarch conn action
 
 -- | Run action with a unused connection from the pool.
-runMonarchPool :: (MonadBaseControl IO m, MonadIO m) =>
+runMonarchPool :: ( MonadBaseControl IO m
+                  , MonadIO m ) =>
                   MonarchT m a -- ^ action
                -> ConnectionPool -- ^ connection pool
                -> m (Either Code a)
 runMonarchPool action pool =
-    withResource pool (\conn -> runMonarch conn action)
+    withResource pool $ flip runMonarch action
 
-throwError' :: (Monad m) =>
+throwError' :: Monad m =>
                Code
             -> SomeException
             -> MonarchT m a
-throwError' e _ = throwError e
+throwError' = const . throwError
 
-sendLBS :: (MonadBaseControl IO m, MonadIO m) =>
+sendLBS :: ( MonadBaseControl IO m
+           , MonadIO m ) =>
            LBS.ByteString
         -> MonarchT m ()
 sendLBS lbs = do
   conn <- connection <$> ask
-  liftIO (NSLBS.sendAll conn lbs) `catch` throwError' SendError
+  liftIO (LBS.sendAll conn lbs) `catch` throwError' SendError
 
-recvLBS :: (MonadBaseControl IO m, MonadIO m) =>
+recvLBS :: ( MonadBaseControl IO m
+           , MonadIO m ) =>
            Int64
         -> MonarchT m LBS.ByteString
 recvLBS n = do
   conn <- connection <$> ask
-  lbs <- liftIO (NSLBS.recv conn n) `catch` throwError' ReceiveError
+  lbs <- liftIO (LBS.recv conn n) `catch` throwError' ReceiveError
   if n /= LBS.length lbs
     then throwError ReceiveError
     else return lbs
