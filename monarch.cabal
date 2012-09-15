@@ -16,6 +16,10 @@ source-repository head
   type:                git
   location:            https://github.com/notogawa/monarch
 
+flag develop
+  description:         For developer
+  default:             False
+
 library
   exposed-modules:     Database.Monarch
                      , Database.Monarch.MessagePack
@@ -37,6 +41,10 @@ library
                      , transformers-base ==0.4.*
 
 test-suite specs
+  if flag(develop)
+    buildable:         True
+  else
+    buildable:         False
   hs-source-dirs:      test, .
   type:                exitcode-stdio-1.0
   main-is:             specs.hs
@@ -62,6 +70,10 @@ test-suite doctests
                      , doctest ==0.8.*
 
 test-suite benchmark
+  if flag(develop)
+    buildable:         True
+  else
+    buildable:         False
   hs-source-dirs:      test, .
   type:                exitcode-stdio-1.0
   main-is:             benchmark.hs
