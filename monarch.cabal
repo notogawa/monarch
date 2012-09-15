@@ -1,5 +1,5 @@
 name:                monarch
-version:             0.7.0.1
+version:             0.8.0.0
 synopsis:            Monadic interface for TokyoTyrant.
 description:         This package provides simple monadic interface for TokyoTyrant.
 license:             BSD3

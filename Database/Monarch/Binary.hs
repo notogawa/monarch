@@ -152,7 +152,7 @@ multipleGet keys = communicate request response
     where
       request = do
         putMagic 0x31
-        putWord32be $ fromIntegral $ length keys
+        putWord32be . fromIntegral $ length keys
         mapM_ (\key -> do
                  putWord32be $ lengthBS32 key
                  putByteString key) keys
@@ -406,7 +406,7 @@ misc func opts args = communicate request response
       putMagic 0x90
       putWord32be $ lengthBS32 func
       putOptions opts
-      putWord32be $ fromIntegral $ length args
+      putWord32be . fromIntegral $ length args
       putByteString func
       mapM_ putByteString args
     response Success = do
