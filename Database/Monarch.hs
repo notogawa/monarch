@@ -11,7 +11,7 @@ module Database.Monarch
     , runMonarchPool
     , ExtOption(..), RestoreOption(..), MiscOption(..)
     , Code(..)
-    , put, putKeep, putCat, putShiftLeft
+    , put, putKeep, putCat, putShiftLeft, multiplePut
     , putNoResponse
     , out
     , get, multipleGet

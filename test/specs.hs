@@ -13,6 +13,8 @@ main = hspec $ do
          describe "put" $ do
            it "store a record" casePutRecord
            it "overwrite a record if same key exists" casePutOverwriteRecord
+         describe "mput" $ do
+           it "store records" caseMputRecord
          describe "putkeep" $ do
            it "store a new record" casePutKeepNewRecord
            it "has no effect if same key exists" casePutKeepNoEffect
@@ -77,6 +79,16 @@ casePutOverwriteRecord =
         put "foo" "bar"
         put "foo" "hoge"
         get "foo"
+
+caseMputRecord :: Assertion
+caseMputRecord =
+    action `returns` Right (Just "bob", Just "bar")
+    where
+      action = do
+        multiplePut [("foo","bar"),("alice","bob")]
+        bob <- get "alice"
+        bar <- get "foo"
+        return (bob, bar)
 
 casePutKeepNewRecord :: Assertion
 casePutKeepNewRecord =
