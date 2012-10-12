@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 -- | TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>).
 module Database.Monarch.Binary
     (
@@ -21,7 +22,7 @@ import Data.Int
 import Data.Maybe
 import qualified Data.Binary as B
 import Data.Binary.Put (putWord32be, putByteString)
-import Data.ByteString hiding (length, copy, init, last)
+import Data.ByteString.Char8 hiding (length, copy, init, last)
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
@@ -47,7 +48,7 @@ put key value = communicate request response
       response Success = return ()
       response code = throwError code
 
--- | Store a record.
+-- | Store records.
 --   If a record with the same key exists in the database,
 --   it is overwritten.
 multiplePut :: ( MonadBaseControl IO m
@@ -55,19 +56,7 @@ multiplePut :: ( MonadBaseControl IO m
                [(ByteString,ByteString)] -- ^ key & value pairs
             -> MonarchT m ()
 multiplePut [] = return ()
-multiplePut kvs = communicate request response
-    where
-      request = do
-        forM_ (init kvs) $ \(key, value) -> do
-          putMagic 0x18
-          mapM_ (putWord32be . lengthBS32) [key, value]
-          mapM_ putByteString [key, value]
-        forM_ [last kvs] $ \(key, value) -> do
-          putMagic 0x10
-          mapM_ (putWord32be . lengthBS32) [key, value]
-          mapM_ putByteString [key, value]
-      response Success = return ()
-      response code = throwError code
+multiplePut kvs = void $ misc "putlist" [] (kvs >>= \(k,v)->[k,v])
 
 -- | Store a new record.
 --   If a record with the same key exists in the database,
@@ -430,7 +419,9 @@ misc func opts args = communicate request response
       putOptions opts
       putWord32be . fromIntegral $ length args
       putByteString func
-      mapM_ putByteString args
+      mapM_ (\arg -> do
+               putWord32be $ lengthBS32 arg
+               putByteString arg) args
     response Success = do
       siz <- fromIntegral <$> parseWord32
       replicateM siz parseBS

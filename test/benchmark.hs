@@ -2,7 +2,6 @@
 import Criterion.Main
 import qualified Database.Monarch as Monarch
 import qualified Database.TokyoTyrant.FFI as FFI
-import Control.Monad
 import Data.ByteString.Char8 ()
 
 main :: IO ()
@@ -18,14 +17,12 @@ main = defaultMain
        ]
 
 size :: Int
-size = 30000
+size = 10000
 
 ffi :: IO ()
 ffi = do
   Right conn <- FFI.open "localhost" 1978
-  forM_ [1..size] $ \_ -> do
-    FFI.put conn "foo" "bar"
-    return ()
+  FFI.put conn "foo" "bar"
   FFI.close conn
 
 mffi :: IO ()
@@ -36,10 +33,9 @@ mffi = do
 
 monarch :: IO ()
 monarch = do
-  Right () <- Monarch.withMonarchConn "localhost" 1978 $ Monarch.runMonarchConn $
-    forM_ [1..size] $ \_ -> do
-      Monarch.put "foo" "bar"
-      return ()
+  Right () <- Monarch.withMonarchConn "localhost" 1978 $
+              Monarch.runMonarchConn $
+              Monarch.put "foo" "bar"
   return ()
 
 mmonarch :: IO ()
