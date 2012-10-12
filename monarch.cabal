@@ -1,5 +1,5 @@
 name:                monarch
-version:             0.7.0.1
+version:             0.8.1.1
 synopsis:            Monadic interface for TokyoTyrant.
 description:         This package provides simple monadic interface for TokyoTyrant.
 license:             BSD3
@@ -16,9 +16,12 @@ source-repository head
   type:                git
   location:            https://github.com/notogawa/monarch
 
+flag develop
+  description:         For developer
+  default:             False
+
 library
   exposed-modules:     Database.Monarch
-                     , Database.Monarch.MessagePack
   other-modules:       Database.Monarch.Utils
                      , Database.Monarch.Raw
                      , Database.Monarch.Binary
@@ -28,7 +31,6 @@ library
                      , transformers ==0.3.*
                      , bytestring ==0.9.*
                      , binary ==0.5.*
-                     , msgpack ==0.7.*
                      , transformers ==0.3.*
                      , network ==2.3.*
                      , pool-conduit ==0.1.*
@@ -37,6 +39,10 @@ library
                      , transformers-base ==0.4.*
 
 test-suite specs
+  if flag(develop)
+    buildable:         True
+  else
+    buildable:         False
   hs-source-dirs:      test, .
   type:                exitcode-stdio-1.0
   main-is:             specs.hs
@@ -45,7 +51,6 @@ test-suite specs
                      , transformers ==0.3.*
                      , bytestring ==0.9.*
                      , binary ==0.5.*
-                     , msgpack ==0.7.*
                      , network ==2.3.*
                      , pool-conduit ==0.1.*
                      , monad-control ==0.3.*
@@ -61,7 +66,11 @@ test-suite doctests
   build-depends:       base ==4.*
                      , doctest ==0.8.*
 
-test-suite benchmark
+benchmark benchmark
+  if flag(develop)
+    buildable:         True
+  else
+    buildable:         False
   hs-source-dirs:      test, .
   type:                exitcode-stdio-1.0
   main-is:             benchmark.hs
@@ -77,3 +86,4 @@ test-suite benchmark
                      , tokyotyrant-haskell ==1.0.*
                      , transformers ==0.3.*
                      , transformers-base ==0.4.*
+                     , criterion ==0.6.*

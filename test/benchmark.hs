@@ -1,27 +1,45 @@
 {-# LANGUAGE OverloadedStrings #-}
-import Database.Monarch
-
+import Criterion.Main
+import qualified Database.Monarch as Monarch
 import qualified Database.TokyoTyrant.FFI as FFI
-import Control.Monad
 import Data.ByteString.Char8 ()
 
 main :: IO ()
-main = monarch
+main = defaultMain
+       [ bgroup "TokyoTyrant (multiple put)"
+         [ bench "monarch" $ nfIO mmonarch
+         , bench "tokyotyrant-haskell" $ nfIO mffi
+         ]
+       , bgroup "TokyoTyrant (put)"
+         [ bench "monarch" $ nfIO monarch
+         , bench "tokyotyrant-haskell" $ nfIO ffi
+         ]
+       ]
+
+size :: Int
+size = 10000
 
 ffi :: IO ()
 ffi = do
   Right conn <- FFI.open "localhost" 1978
-  forM_ [1..1000::Int] $ \_ -> do
-    FFI.put conn "foo" "bar"
-    FFI.get conn "foo"
-    return ()
+  FFI.put conn "foo" "bar"
+  FFI.close conn
+
+mffi :: IO ()
+mffi = do
+  Right conn <- FFI.open "localhost" 1978
+  FFI.mput conn $ replicate size ("foo", "bar")
   FFI.close conn
 
 monarch :: IO ()
 monarch = do
-  withMonarchConn "localhost" 1978 $ runMonarchConn $ do
-         forM_ [1..1000::Int] $ \_ -> do
-            put "foo" "bar"
-            get "foo"
-            return ()
+  Right () <- Monarch.withMonarchConn "localhost" 1978 $
+              Monarch.runMonarchConn $
+              Monarch.put "foo" "bar"
+  return ()
+
+mmonarch :: IO ()
+mmonarch = do
+  Right () <- Monarch.withMonarchConn "localhost" 1978 $ Monarch.runMonarchConn $
+         Monarch.multiplePut $ replicate size ("foo", "bar")
   return ()

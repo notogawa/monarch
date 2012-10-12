@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 import Database.Monarch
-import qualified Database.Monarch.MessagePack as MsgPack
 
 import Control.Applicative
 import Data.List
@@ -14,6 +13,8 @@ main = hspec $ do
          describe "put" $ do
            it "store a record" casePutRecord
            it "overwrite a record if same key exists" casePutOverwriteRecord
+         describe "mput" $ do
+           it "store records" caseMputRecord
          describe "putkeep" $ do
            it "store a new record" casePutKeepNewRecord
            it "has no effect if same key exists" casePutKeepNoEffect
@@ -42,12 +43,6 @@ main = hspec $ do
            it "invalid if end iterator" caseIternextInvalid
          describe "fwmkeys" $ do
            it "get forward matching keys" caseFwmkeys
-         describe "put MsgPackable" $ do
-           it "store a MessagePackable record" casePutMsgPackRecord
-         describe "putkeep MsgPackable" $ do
-           it "store a new MessagePackable record" casePutKeepNewMsgPackRecord
-         describe "putnr MsgPackable" $ do
-           it "store a record" casePutNrMsgPackRecord
 
 returns :: (Eq a, Show a) =>
            MonarchT IO a
@@ -84,6 +79,16 @@ casePutOverwriteRecord =
         put "foo" "bar"
         put "foo" "hoge"
         get "foo"
+
+caseMputRecord :: Assertion
+caseMputRecord =
+    action `returns` Right (Just "bob", Just "bar")
+    where
+      action = do
+        multiplePut [("foo","bar"),("alice","bob")]
+        bob <- get "alice"
+        bar <- get "foo"
+        return (bob, bar)
 
 casePutKeepNewRecord :: Assertion
 casePutKeepNewRecord =
@@ -255,27 +260,3 @@ caseFwmkeys =
         put "abrac" "adabra"
         put "abraca" "dabra"
         sort <$> forwardMatchingKeys "abra" (Just 2)
-
-casePutMsgPackRecord :: Assertion
-casePutMsgPackRecord =
-    action `returns` Right (Just True)
-    where
-      action = do
-        MsgPack.put "foo" True
-        MsgPack.get "foo"
-
-casePutKeepNewMsgPackRecord :: Assertion
-casePutKeepNewMsgPackRecord =
-    action `returns` Right (Just [1,2,3::Int])
-    where
-      action = do
-        MsgPack.putKeep "foo" [1,2,3::Int]
-        MsgPack.get "foo"
-
-casePutNrMsgPackRecord :: Assertion
-casePutNrMsgPackRecord =
-    action `returns` Right (Just (10::Int, False, 0.5::Double))
-    where
-      action = do
-        MsgPack.putNoResponse "foo" (10::Int, False, 0.5::Double)
-        MsgPack.get "foo"
