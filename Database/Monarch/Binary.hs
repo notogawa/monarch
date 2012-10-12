@@ -2,7 +2,7 @@
 -- | TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>).
 module Database.Monarch.Binary
     (
-      put, putKeep, putCat, putShiftLeft
+      put, putKeep, putCat, putShiftLeft, multiplePut
     , putNoResponse
     , out
     , get, multipleGet
@@ -21,7 +21,7 @@ import Data.Int
 import Data.Maybe
 import qualified Data.Binary as B
 import Data.Binary.Put (putWord32be, putByteString)
-import Data.ByteString hiding (length, copy)
+import Data.ByteString hiding (length, copy, init, last)
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
@@ -44,6 +44,28 @@ put key value = communicate request response
         putMagic 0x10
         mapM_ (putWord32be . lengthBS32) [key, value]
         mapM_ putByteString [key, value]
+      response Success = return ()
+      response code = throwError code
+
+-- | Store a record.
+--   If a record with the same key exists in the database,
+--   it is overwritten.
+multiplePut :: ( MonadBaseControl IO m
+               , MonadIO m ) =>
+               [(ByteString,ByteString)] -- ^ key & value pairs
+            -> MonarchT m ()
+multiplePut [] = return ()
+multiplePut kvs = communicate request response
+    where
+      request = do
+        forM_ (init kvs) $ \(key, value) -> do
+          putMagic 0x18
+          mapM_ (putWord32be . lengthBS32) [key, value]
+          mapM_ putByteString [key, value]
+        forM_ [last kvs] $ \(key, value) -> do
+          putMagic 0x10
+          mapM_ (putWord32be . lengthBS32) [key, value]
+          mapM_ putByteString [key, value]
       response Success = return ()
       response code = throwError code
 
