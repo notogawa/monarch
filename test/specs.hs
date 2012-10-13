@@ -14,7 +14,7 @@ main = hspec $ do
            it "store a record" casePutRecord
            it "overwrite a record if same key exists" casePutOverwriteRecord
          describe "mput" $ do
-           it "store records" caseMputRecord
+           it "store records" caseMputRecords
          describe "putkeep" $ do
            it "store a new record" casePutKeepNewRecord
            it "has no effect if same key exists" casePutKeepNoEffect
@@ -30,6 +30,8 @@ main = hspec $ do
          describe "out" $ do
            it "remove a record" caseOutRecord
            it "no effect if same key not exists" caseOutNoEffect
+         describe "mout" $ do
+           it "remove records" caseMoutRecords
          describe "get" $ do
            it "retrieve a record" caseGetRecord
          describe "mget" $ do
@@ -80,8 +82,8 @@ casePutOverwriteRecord =
         put "foo" "hoge"
         get "foo"
 
-caseMputRecord :: Assertion
-caseMputRecord =
+caseMputRecords :: Assertion
+caseMputRecords =
     action `returns` Right (Just "bob", Just "bar")
     where
       action = do
@@ -176,6 +178,18 @@ caseOutNoEffect =
     where
       action = do
         out "hoge"
+
+caseMoutRecords :: Assertion
+caseMoutRecords =
+    action `returns` Right (Nothing, Nothing)
+    where
+      action = do
+        put "foo" "bar"
+        put "hoge" "fuga"
+        multipleOut ["foo", "hoge"]
+        bar <- get "foo"
+        fuga <- get "hoge"
+        return (bar, fuga)
 
 caseGetRecord :: Assertion
 caseGetRecord =
