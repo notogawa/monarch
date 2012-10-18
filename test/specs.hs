@@ -2,7 +2,9 @@
 import Database.Monarch
 
 import Control.Applicative
+import Control.Monad.IO.Class
 import Data.List
+import qualified Data.ByteString as BS
 import Data.ByteString.Char8 ()
 import Test.HUnit
 import Test.Hspec.Monadic
@@ -14,7 +16,7 @@ main = hspec $ do
            it "store a record" casePutRecord
            it "overwrite a record if same key exists" casePutOverwriteRecord
          describe "mput" $ do
-           it "store records" caseMputRecord
+           it "store records" caseMputRecords
          describe "putkeep" $ do
            it "store a new record" casePutKeepNewRecord
            it "has no effect if same key exists" casePutKeepNoEffect
@@ -30,8 +32,11 @@ main = hspec $ do
          describe "out" $ do
            it "remove a record" caseOutRecord
            it "no effect if same key not exists" caseOutNoEffect
+         describe "mout" $ do
+           it "remove records" caseMoutRecords
          describe "get" $ do
            it "retrieve a record" caseGetRecord
+           it "retrieve large record" caseGetLargeRecord
          describe "mget" $ do
            it "retrieve records" caseMgetRecords
          describe "vsiz" $ do
@@ -80,8 +85,8 @@ casePutOverwriteRecord =
         put "foo" "hoge"
         get "foo"
 
-caseMputRecord :: Assertion
-caseMputRecord =
+caseMputRecords :: Assertion
+caseMputRecords =
     action `returns` Right (Just "bob", Just "bar")
     where
       action = do
@@ -177,6 +182,18 @@ caseOutNoEffect =
       action = do
         out "hoge"
 
+caseMoutRecords :: Assertion
+caseMoutRecords =
+    action `returns` Right (Nothing, Nothing)
+    where
+      action = do
+        put "foo" "bar"
+        put "hoge" "fuga"
+        multipleOut ["foo", "hoge"]
+        bar <- get "foo"
+        fuga <- get "hoge"
+        return (bar, fuga)
+
 caseGetRecord :: Assertion
 caseGetRecord =
     action `returns` Right (Just "bar", Nothing)
@@ -186,6 +203,15 @@ caseGetRecord =
         stored <- get "foo"
         unstored <- get "bar"
         return (stored, unstored)
+
+caseGetLargeRecord :: Assertion
+caseGetLargeRecord = do
+  content <- BS.concat . replicate 1024 <$> liftIO (BS.readFile "test/specs.hs")
+  action content `returns` Right (Just content)
+    where
+      action content = do
+        put "foo" content
+        get "foo"
 
 caseMgetRecords :: Assertion
 caseMgetRecords =

@@ -156,9 +156,11 @@ recvLBS :: ( MonadBaseControl IO m
 recvLBS n = do
   conn <- connection <$> ask
   lbs <- liftIO (LBS.recv conn n) `catch` throwError' ReceiveError
-  if n /= LBS.length lbs
+  if LBS.null lbs
     then throwError ReceiveError
-    else return lbs
+    else if n == LBS.length lbs
+           then return lbs
+           else LBS.append lbs <$> recvLBS (n - LBS.length lbs)
 
 getConnection :: HostName
               -> Int

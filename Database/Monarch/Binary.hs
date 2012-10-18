@@ -5,7 +5,7 @@ module Database.Monarch.Binary
     (
       put, putKeep, putCat, putShiftLeft, multiplePut
     , putNoResponse
-    , out
+    , out, multipleOut
     , get, multipleGet
     , valueSize
     , iterInit, iterNext
@@ -138,6 +138,14 @@ out key = communicate request response
       response Success = return ()
       response InvalidOperation = return ()
       response code = throwError code
+
+-- | Remove records.
+multipleOut :: ( MonadBaseControl IO m
+               , MonadIO m ) =>
+               [ByteString] -- ^ keys
+            -> MonarchT m ()
+multipleOut [] = return ()
+multipleOut keys = void $ misc "outlist" [] keys
 
 -- | Retrieve a record.
 get :: ( MonadBaseControl IO m

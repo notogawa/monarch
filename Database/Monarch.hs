@@ -13,7 +13,7 @@ module Database.Monarch
     , Code(..)
     , put, putKeep, putCat, putShiftLeft, multiplePut
     , putNoResponse
-    , out
+    , out, multipleOut
     , get, multipleGet
     , valueSize
     , iterInit, iterNext
