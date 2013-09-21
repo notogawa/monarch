@@ -4,20 +4,9 @@ before_install:
   - sudo apt-get install -qq tokyotyrant libtokyotyrant-dev
   - sudo cp .travis/etc/default/tokyotyrant /etc/default/tokyotyrant
   - sudo service tokyotyrant start
-  - sudo apt-get install -qq libghc-mtl-dev
-  - sudo apt-get install -qq libghc-bytestring-dev
-  - sudo apt-get install -qq libghc-binary-dev
-  - sudo apt-get install -qq libghc-transformers-dev
-  - sudo apt-get install -qq libghc-network-dev
-  - sudo apt-get install -qq libghc-pool-conduit-dev
-  - sudo apt-get install -qq libghc-monad-control-dev
-  - sudo apt-get install -qq libghc-lifted-base-dev
-  - sudo apt-get install -qq libghc-transformers-base-dev
-  - sudo apt-get install -qq libghc-hspec-dev
-  - sudo apt-get install -qq libghc-hunit-dev
 install:
-  - cabal install --only-dependencies --enable-tests
+  - cabal install --only-dependencies --enable-tests --enable-benchmarks --force-reinstalls
 script:
-  - cabal configure --enable-tests -fdevelop
+  - cabal configure --enable-tests --enable-benchmarks -fdevelop
   - cabal build
   - cabal test --show-details=always
