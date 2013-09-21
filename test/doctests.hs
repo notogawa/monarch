@@ -1,4 +1,5 @@
 import Test.DocTest
 
 main :: IO ()
-main = doctest [ "Database.Monarch.Utils" ]
+main = doctest [ "-isrc"
+               , "Database.Monarch.Utils" ]

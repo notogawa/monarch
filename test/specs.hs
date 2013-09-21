@@ -55,13 +55,13 @@ returns :: (Eq a, Show a) =>
         -> IO ()
 action `returns` expected = connTest >> poolTest
   where
-  connTest = do result <- withMonarchConn "localhost" 1978 $ runMonarchConn $ do
+  connTest = do result <- withMonarchConn "127.0.0.1" 1978 $ runMonarchConn $ do
                             vanish
                             result <- action
                             vanish
                             return result
                 result @?= expected
-  poolTest = do result <- withMonarchPool "localhost" 1978 20 $ runMonarchPool $ do
+  poolTest = do result <- withMonarchPool "127.0.0.1" 1978 20 $ runMonarchPool $ do
                             vanish
                             result <- action
                             vanish

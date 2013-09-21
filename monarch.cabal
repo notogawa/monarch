@@ -10,7 +10,7 @@ category:            Database
 build-type:          Simple
 cabal-version:       >=1.8
 homepage:            https://github.com/notogawa/monarch
-tested-with:         GHC ==7.4.2
+tested-with:         GHC ==7.6.3
 
 source-repository head
   type:                git
@@ -21,6 +21,7 @@ flag develop
   default:             False
 
 library
+  hs-source-dirs:      src
   exposed-modules:     Database.Monarch
   other-modules:       Database.Monarch.Utils
                      , Database.Monarch.Raw
@@ -43,24 +44,18 @@ test-suite specs
     buildable:         True
   else
     buildable:         False
-  hs-source-dirs:      test, .
+  hs-source-dirs:      test
   type:                exitcode-stdio-1.0
   main-is:             specs.hs
   build-depends:       base ==4.*
-                     , mtl ==2.1.*
-                     , transformers ==0.3.*
-                     , bytestring >=0.9 && <0.11
-                     , binary ==0.5.*
-                     , network >=2.3 && <2.5
-                     , pool-conduit ==0.1.*
-                     , monad-control ==0.3.*
-                     , lifted-base >=0.1 && <0.3
-                     , transformers-base ==0.4.*
+                     , monarch
+                     , bytestring
+                     , transformers
                      , hspec
-                     , HUnit ==1.2.*
+                     , HUnit
 
 test-suite doctests
-  hs-source-dirs:      test, .
+  hs-source-dirs:      test
   type:                exitcode-stdio-1.0
   main-is:             doctests.hs
   build-depends:       base ==4.*
@@ -71,19 +66,11 @@ benchmark benchmark
     buildable:         True
   else
     buildable:         False
-  hs-source-dirs:      test, .
+  hs-source-dirs:      test
   type:                exitcode-stdio-1.0
   main-is:             benchmark.hs
   build-depends:       base ==4.*
-                     , mtl ==2.1.*
-                     , transformers ==0.3.*
-                     , bytestring ==0.9.*
-                     , binary ==0.5.*
-                     , network ==2.3.*
-                     , pool-conduit ==0.1.*
-                     , monad-control ==0.3.*
-                     , lifted-base ==0.1.*
-                     , tokyotyrant-haskell ==1.0.*
-                     , transformers ==0.3.*
-                     , transformers-base ==0.4.*
-                     , criterion ==0.6.*
+                     , monarch
+                     , tokyotyrant-haskell
+                     , bytestring
+                     , criterion
