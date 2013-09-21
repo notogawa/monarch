@@ -4,6 +4,7 @@ before_install:
   - sudo apt-get install -qq tokyotyrant libtokyotyrant-dev
   - sudo cp .travis/etc/default/tokyotyrant /etc/default/tokyotyrant
   - sudo service tokyotyrant start
+  - sudo apt-get install libghc-*
 install:
   - cabal install --only-dependencies --enable-tests --enable-benchmarks
 script:
