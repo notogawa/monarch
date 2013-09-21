@@ -1,7 +1,8 @@
 language: haskell
 before_install:
+  - find . -type f
   - sudo apt-get install -qq tokyotyrant libtokyotyrant-dev
-  - cp .travis/etc/default/tokyotyrant /etc/default/tokyotyrant
-  - service tokyotyrant start
+  - sudo cp .travis/etc/default/tokyotyrant /etc/default/tokyotyrant
+  - sudo service tokyotyrant start
 script:
   - cabal configure --enable-tests && cabal build && cabal test --show-details=always
