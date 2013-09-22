@@ -9,7 +9,7 @@ import Data.Int
 import Data.Maybe
 import qualified Data.Binary as B
 import Data.Binary.Put (putWord32be, putByteString)
--- import Data.ByteString.Char8 hiding (length, copy, init, last)
+import Data.ByteString.Char8 ()
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Error
