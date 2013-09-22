@@ -1,4 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 -- | This module provide TokyoTyrant monadic access interface.
 --
 module Database.Monarch
@@ -11,19 +10,7 @@ module Database.Monarch
     , runMonarchPool
     , ExtOption(..), RestoreOption(..), MiscOption(..)
     , Code(..)
-    , put, putKeep, putCat, putShiftLeft, multiplePut
-    , putNoResponse
-    , out, multipleOut
-    , get, multipleGet
-    , valueSize
-    , iterInit, iterNext
-    , forwardMatchingKeys
-    , addInt, addDouble
-    , ext, sync, optimize, vanish, copy, restore
-    , setMaster
-    , recordNum, size
-    , status
-    , misc
+    , MonadMonarch(..)
     ) where
 
 import Database.Monarch.Raw hiding (sendLBS, recvLBS)

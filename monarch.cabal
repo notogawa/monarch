@@ -23,9 +23,11 @@ flag develop
 library
   hs-source-dirs:      src
   exposed-modules:     Database.Monarch
+                       Database.Monarch.Mock
   other-modules:       Database.Monarch.Utils
-                     , Database.Monarch.Raw
-                     , Database.Monarch.Binary
+                       Database.Monarch.Raw
+                       Database.Monarch.Binary
+                       Database.Monarch.Mock.Raw
   ghc-options:         -Wall
   build-depends:       base ==4.*
                      , mtl ==2.1.*
@@ -38,6 +40,8 @@ library
                      , monad-control ==0.3.*
                      , lifted-base >=0.1 && <0.3
                      , transformers-base ==0.4.*
+                     , containers >=0.4 && <0.6
+                     , stm >=2.3 && <2.5
 
 test-suite specs
   if flag(develop)
