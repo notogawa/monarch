@@ -25,9 +25,10 @@ library
   exposed-modules:     Database.Monarch
                        Database.Monarch.Mock
   other-modules:       Database.Monarch.Utils
-                       Database.Monarch.Raw
-                       Database.Monarch.Binary
-                       Database.Monarch.Mock.Raw
+                       Database.Monarch.Types
+                       Database.Monarch.Action
+                       Database.Monarch.Mock.Types
+                       Database.Monarch.Mock.Action
   ghc-options:         -Wall
   build-depends:       base ==4.*
                      , mtl ==2.1.*

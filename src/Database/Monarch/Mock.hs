@@ -4,4 +4,5 @@ module Database.Monarch.Mock
     , runMock
     ) where
 
-import Database.Monarch.Mock.Raw
+import Database.Monarch.Mock.Types
+import Database.Monarch.Action ()

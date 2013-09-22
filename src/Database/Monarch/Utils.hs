@@ -24,7 +24,7 @@ import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 
-import Database.Monarch.Raw
+import Database.Monarch.Types
 
 class BitFlag32 a where
     fromOption :: a -> Int32
