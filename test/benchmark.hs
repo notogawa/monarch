@@ -21,25 +21,25 @@ size = 10000
 
 ffi :: IO ()
 ffi = do
-  Right conn <- FFI.open "localhost" 1978
+  Right conn <- FFI.open "127.0.0.1" 1978
   FFI.put conn "foo" "bar"
   FFI.close conn
 
 mffi :: IO ()
 mffi = do
-  Right conn <- FFI.open "localhost" 1978
+  Right conn <- FFI.open "127.0.0.1" 1978
   FFI.mput conn $ replicate size ("foo", "bar")
   FFI.close conn
 
 monarch :: IO ()
 monarch = do
-  Right () <- Monarch.withMonarchConn "localhost" 1978 $
+  Right () <- Monarch.withMonarchConn "127.0.0.1" 1978 $
               Monarch.runMonarchConn $
               Monarch.put "foo" "bar"
   return ()
 
 mmonarch :: IO ()
 mmonarch = do
-  Right () <- Monarch.withMonarchConn "localhost" 1978 $ Monarch.runMonarchConn $
+  Right () <- Monarch.withMonarchConn "127.0.0.1" 1978 $ Monarch.runMonarchConn $
          Monarch.multiplePut $ replicate size ("foo", "bar")
   return ()

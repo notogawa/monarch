@@ -5,4 +5,4 @@ module Database.Monarch.Mock
     ) where
 
 import Database.Monarch.Mock.Types
-import Database.Monarch.Action ()
+import Database.Monarch.Mock.Action ()

@@ -51,13 +51,14 @@ test-suite specs
     buildable:         False
   hs-source-dirs:      test
   type:                exitcode-stdio-1.0
-  main-is:             specs.hs
+  ghc-options:         -Wall -threaded
+  main-is:             Spec.hs
+  other-modules:       Database.Monarch.ActionSpec
   build-depends:       base ==4.*
                      , monarch
                      , bytestring
                      , transformers
-                     , hspec
-                     , HUnit
+                     , hspec >=1.3
 
 test-suite doctests
   hs-source-dirs:      test

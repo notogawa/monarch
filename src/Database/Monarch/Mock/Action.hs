@@ -63,10 +63,10 @@ instance ( MonadBaseControl IO m, MonadIO m ) => MonadMonarch (MockT m) where
       let modify db
               | M.member key (mockDB db) =
                   case mockDB db ! key of
-                    TTString v -> putDBS key (BS.drop width $ v <> value) db
+                    TTString v -> putDBS key (BS.drop (BS.length (v <> value) - width) $ v <> value) db
                     _          -> error "putShiftLeft"
               | otherwise              =
-                  putDBS key (BS.drop width value) db
+                  putDBS key value db
       liftIO $ atomically $ modifyTVar tdb modify
 
     putNoResponse = put

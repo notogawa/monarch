@@ -1,53 +1,52 @@
 {-# LANGUAGE OverloadedStrings #-}
-import Database.Monarch
+module Database.Monarch.ActionSpec ( spec ) where
 
 import Control.Applicative
 import Control.Monad.IO.Class
 import Data.List
 import qualified Data.ByteString as BS
 import Data.ByteString.Char8 ()
-import Test.HUnit
-import Test.Hspec.Monadic
-import Test.Hspec.HUnit ()
+import Test.Hspec
+import Database.Monarch
 
-main :: IO ()
-main = hspec $ do
-         describe "put" $ do
-           it "store a record" casePutRecord
-           it "overwrite a record if same key exists" casePutOverwriteRecord
-         describe "mput" $ do
-           it "store records" caseMputRecords
-         describe "putkeep" $ do
-           it "store a new record" casePutKeepNewRecord
-           it "has no effect if same key exists" casePutKeepNoEffect
-         describe "putcat" $ do
-           it "concatenate a value at the end of the existing record" casePutCatRecord
-           it "store a new record if there is no corresponding record" casePutCatNewRecord
-         describe "putshl" $ do
-           it "concatenate a value at the end of the existing record and shift it to the left" casePutShlRecord
-           it "store a new record if there is no corresponding record" casePutShlNewRecord
-         describe "putnr" $ do
-           it "store a record" casePutNrRecord
-           it "overwrite a record if same key exists" casePutNrOverwriteRecord
-         describe "out" $ do
-           it "remove a record" caseOutRecord
-           it "no effect if same key not exists" caseOutNoEffect
-         describe "mout" $ do
-           it "remove records" caseMoutRecords
-         describe "get" $ do
-           it "retrieve a record" caseGetRecord
-           it "retrieve large record" caseGetLargeRecord
-         describe "mget" $ do
-           it "retrieve records" caseMgetRecords
-         describe "vsiz" $ do
-           it "get the size of the value of a record" caseVsizRecord
-         describe "iterinit" $ do
-           it "initialize the iterator" caseIterinit
-         describe "iternext" $ do
-           it "get the next key of the iterator" caseIternext
-           it "invalid if end iterator" caseIternextInvalid
-         describe "fwmkeys" $ do
-           it "get forward matching keys" caseFwmkeys
+spec :: Spec
+spec = do
+  describe "put" $ do
+    it "store a record" casePutRecord
+    it "overwrite a record if same key exists" casePutOverwriteRecord
+  describe "mput" $ do
+    it "store records" caseMputRecords
+  describe "putkeep" $ do
+    it "store a new record" casePutKeepNewRecord
+    it "has no effect if same key exists" casePutKeepNoEffect
+  describe "putcat" $ do
+    it "concatenate a value at the end of the existing record" casePutCatRecord
+    it "store a new record if there is no corresponding record" casePutCatNewRecord
+  describe "putshl" $ do
+    it "concatenate a value at the end of the existing record and shift it to the left" casePutShlRecord
+    it "store a new record if there is no corresponding record" casePutShlNewRecord
+  describe "putnr" $ do
+    it "store a record" casePutNrRecord
+    it "overwrite a record if same key exists" casePutNrOverwriteRecord
+  describe "out" $ do
+    it "remove a record" caseOutRecord
+    it "no effect if same key not exists" caseOutNoEffect
+  describe "mout" $ do
+    it "remove records" caseMoutRecords
+  describe "get" $ do
+    it "retrieve a record" caseGetRecord
+    it "retrieve large record" caseGetLargeRecord
+  describe "mget" $ do
+    it "retrieve records" caseMgetRecords
+  describe "vsiz" $ do
+    it "get the size of the value of a record" caseVsizRecord
+  describe "iterinit" $ do
+    it "initialize the iterator" caseIterinit
+  describe "iternext" $ do
+    it "get the next key of the iterator" caseIternext
+    it "invalid if end iterator" caseIternextInvalid
+  describe "fwmkeys" $ do
+    it "get forward matching keys" caseFwmkeys
 
 returns :: (Eq a, Show a) =>
            MonarchT IO a
@@ -60,15 +59,15 @@ action `returns` expected = connTest >> poolTest
                             result <- action
                             vanish
                             return result
-                result @?= expected
+                result `shouldBe` expected
   poolTest = do result <- withMonarchPool "127.0.0.1" 1978 20 $ runMonarchPool $ do
                             vanish
                             result <- action
                             vanish
                             return result
-                result @?= expected
+                result `shouldBe` expected
 
-casePutRecord :: Assertion
+casePutRecord :: IO ()
 casePutRecord =
     action `returns` Right (Just "bar")
     where
@@ -76,7 +75,7 @@ casePutRecord =
         put "foo" "bar"
         get "foo"
 
-casePutOverwriteRecord :: Assertion
+casePutOverwriteRecord :: IO ()
 casePutOverwriteRecord =
     action `returns` Right (Just "hoge")
     where
@@ -85,7 +84,7 @@ casePutOverwriteRecord =
         put "foo" "hoge"
         get "foo"
 
-caseMputRecords :: Assertion
+caseMputRecords :: IO ()
 caseMputRecords =
     action `returns` Right (Just "bob", Just "bar")
     where
@@ -95,7 +94,7 @@ caseMputRecords =
         bar <- get "foo"
         return (bob, bar)
 
-casePutKeepNewRecord :: Assertion
+casePutKeepNewRecord :: IO ()
 casePutKeepNewRecord =
     action `returns` Right (Just "hoge")
     where
@@ -103,7 +102,7 @@ casePutKeepNewRecord =
         putKeep "foo" "hoge"
         get "foo"
 
-casePutKeepNoEffect :: Assertion
+casePutKeepNoEffect :: IO ()
 casePutKeepNoEffect =
     action `returns` Right (Just "bar")
     where
@@ -112,7 +111,7 @@ casePutKeepNoEffect =
         putKeep "foo" "hoge"
         get "foo"
 
-casePutCatRecord :: Assertion
+casePutCatRecord :: IO ()
 casePutCatRecord =
     action `returns` Right (Just "abracadabra")
     where
@@ -121,7 +120,7 @@ casePutCatRecord =
         putCat "foo" "cadabra"
         get "foo"
 
-casePutCatNewRecord :: Assertion
+casePutCatNewRecord :: IO ()
 casePutCatNewRecord =
     action `returns` Right (Just "cadabra")
     where
@@ -129,7 +128,7 @@ casePutCatNewRecord =
         putCat "foo" "cadabra"
         get "foo"
 
-casePutShlRecord :: Assertion
+casePutShlRecord :: IO ()
 casePutShlRecord =
     action `returns` Right (Just "racadabra")
     where
@@ -138,7 +137,7 @@ casePutShlRecord =
         putShiftLeft "foo" "cadabra" 9
         get "foo"
 
-casePutShlNewRecord :: Assertion
+casePutShlNewRecord :: IO ()
 casePutShlNewRecord =
     action `returns` Right (Just "cadabra")
     where
@@ -146,7 +145,7 @@ casePutShlNewRecord =
         putShiftLeft "foo" "cadabra" 4
         get "foo"
 
-casePutNrRecord :: Assertion
+casePutNrRecord :: IO ()
 casePutNrRecord =
     action `returns` Right (Just "bar")
     where
@@ -154,7 +153,7 @@ casePutNrRecord =
         putNoResponse "foo" "bar"
         get "foo"
 
-casePutNrOverwriteRecord :: Assertion
+casePutNrOverwriteRecord :: IO ()
 casePutNrOverwriteRecord =
     action `returns` Right (Just "hoge")
     where
@@ -163,7 +162,7 @@ casePutNrOverwriteRecord =
         putNoResponse "foo" "hoge"
         get "foo"
 
-caseOutRecord :: Assertion
+caseOutRecord :: IO ()
 caseOutRecord =
     action `returns` Right (Just "bar", Nothing)
     where
@@ -175,14 +174,14 @@ caseOutRecord =
         unstored <- get "hoge"
         return (stored, unstored)
 
-caseOutNoEffect :: Assertion
+caseOutNoEffect :: IO ()
 caseOutNoEffect =
     action `returns` Right ()
     where
       action = do
         out "hoge"
 
-caseMoutRecords :: Assertion
+caseMoutRecords :: IO ()
 caseMoutRecords =
     action `returns` Right (Nothing, Nothing)
     where
@@ -194,7 +193,7 @@ caseMoutRecords =
         fuga <- get "hoge"
         return (bar, fuga)
 
-caseGetRecord :: Assertion
+caseGetRecord :: IO ()
 caseGetRecord =
     action `returns` Right (Just "bar", Nothing)
     where
@@ -204,16 +203,16 @@ caseGetRecord =
         unstored <- get "bar"
         return (stored, unstored)
 
-caseGetLargeRecord :: Assertion
+caseGetLargeRecord :: IO ()
 caseGetLargeRecord = do
-  content <- BS.concat . replicate 1024 <$> liftIO (BS.readFile "test/specs.hs")
+  content <- BS.concat . replicate 1024 <$> liftIO (BS.readFile "monarch.cabal")
   action content `returns` Right (Just content)
     where
       action content = do
         put "foo" content
         get "foo"
 
-caseMgetRecords :: Assertion
+caseMgetRecords :: IO ()
 caseMgetRecords =
     action `returns` Right [ ("foo", "bar")
                            , ("huga", "hoge")
@@ -230,7 +229,7 @@ caseMgetRecords =
                     , "abra"
                     ]
 
-caseVsizRecord :: Assertion
+caseVsizRecord :: IO ()
 caseVsizRecord =
     action `returns` Right (Just 3, Nothing)
     where
@@ -240,7 +239,7 @@ caseVsizRecord =
         unstored <- valueSize "bar"
         return (stored, unstored)
 
-caseIterinit :: Assertion
+caseIterinit :: IO ()
 caseIterinit =
     action `returns` Right True
     where
@@ -255,7 +254,7 @@ caseIterinit =
         key2 <- iterNext
         return $ key1 == key2
 
-caseIternext :: Assertion
+caseIternext :: IO ()
 caseIternext =
     action `returns` Right [ Just "abra", Just "foo", Just "fuga" ]
     where
@@ -269,14 +268,14 @@ caseIternext =
         key3 <- iterNext
         return $ sort [key1, key2, key3]
 
-caseIternextInvalid :: Assertion
+caseIternextInvalid :: IO ()
 caseIternextInvalid =
     action `returns` Right Nothing
     where
       action = do
         iterNext
 
-caseFwmkeys :: Assertion
+caseFwmkeys :: IO ()
 caseFwmkeys =
     action `returns` Right [ "abra", "abrac" ]
     where
