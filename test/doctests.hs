@@ -2,4 +2,6 @@ import Test.DocTest
 
 main :: IO ()
 main = doctest [ "-isrc"
-               , "Database.Monarch.Utils" ]
+               , "-ignore-package", "monads-tf"
+               , "Database.Monarch.Utils"
+               ]
