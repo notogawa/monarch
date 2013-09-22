@@ -2,7 +2,17 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
--- | TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>).
+-- |
+-- Module      : Database.Monarch.Action
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- TokyoTyrant Original Binary Protocol(<http://fallabs.com/tokyotyrant/spex.html#protocol>).
+--
 module Database.Monarch.Action () where
 
 import Data.Int

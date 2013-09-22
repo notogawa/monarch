@@ -4,7 +4,17 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
--- | Raw definitions.
+-- |
+-- Module      : Database.Monarch.Types
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Type definitions.
+--
 module Database.Monarch.Types
     (
       Monarch, MonarchT
@@ -82,6 +92,7 @@ instance MonadBaseControl base m => MonadBaseControl base (MonarchT m) where
     liftBaseWith = defaultLiftBaseWith StMMonarchT
     restoreM = defaultRestoreM unStMMonarchT
 
+-- | IO Specialized
 type Monarch = MonarchT IO
 
 -- | Run Monarch with TokyoTyrant at target host and port.
@@ -138,11 +149,12 @@ runMonarchPool action pool =
     withResource pool $ flip runMonarch action
 
 throwError' :: Monad m =>
-               Code
-            -> SomeException
-            -> MonarchT m a
+             Code
+          -> SomeException
+          -> MonarchT m a
 throwError' = const . throwError
 
+-- | Send.
 sendLBS :: ( MonadBaseControl IO m
            , MonadIO m ) =>
            LBS.ByteString
@@ -151,6 +163,7 @@ sendLBS lbs = do
   conn <- connection <$> ask
   liftIO (LBS.sendAll conn lbs) `catch` throwError' SendError
 
+-- | Receive.
 recvLBS :: ( MonadBaseControl IO m
            , MonadIO m ) =>
            Int64
@@ -164,6 +177,7 @@ recvLBS n = do
            then return lbs
            else LBS.append lbs <$> recvLBS (n - LBS.length lbs)
 
+-- | Make connection from host and port.
 getConnection :: HostName
               -> Int
               -> IO Connection
@@ -177,6 +191,7 @@ getConnection host port = do
   connect sock (addrAddress addr) `catch` failConnect
   return $ Connection sock
 
+-- | Monad Monarch interfaces
 class MonadMonarch m where
 
   -- | Store a record.

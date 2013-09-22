@@ -1,4 +1,13 @@
--- | This module provide TokyoTyrant monadic access interface.
+-- |
+-- Module      : Database.Monarch
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Provide TokyoTyrant monadic access interface.
 --
 module Database.Monarch
     (

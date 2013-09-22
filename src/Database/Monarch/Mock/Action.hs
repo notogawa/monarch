@@ -1,6 +1,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- |
+-- Module      : Database.Monarch.Mock.Types
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Mock actions.
+--
 module Database.Monarch.Mock.Action () where
 
 import Control.Concurrent.STM.TVar

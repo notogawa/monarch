@@ -1,4 +1,15 @@
 {-# LANGUAGE FlexibleContexts #-}
+-- |
+-- Module      : Database.Monarch.Utils
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Internal utilities.
+--
 module Database.Monarch.Utils
     (
       toCode
@@ -39,6 +50,7 @@ instance BitFlag32 RestoreOption where
 instance BitFlag32 MiscOption where
     fromOption NoUpdateLog = 0x1
 
+-- | Convert status code
 toCode :: Int -> Code
 toCode 0 = Success
 toCode 1 = InvalidOperation
@@ -122,38 +134,45 @@ lengthLBS32 = fromIntegral . LBS.length
 fromLBS :: LBS.ByteString -> BS.ByteString
 fromLBS = BS.pack . LBS.unpack
 
+-- | Send request.
 yieldRequest :: ( MonadBaseControl IO m
                 , MonadIO m ) =>
                 B.Put
              -> MonarchT m ()
 yieldRequest = sendLBS . runPut
 
+-- | Receive response code.
 responseCode :: ( MonadBaseControl IO m
                 , MonadIO m ) =>
                 MonarchT m Code
 responseCode = toCode . fromIntegral . runGet B.getWord8 <$> recvLBS 1
 
+-- | Parse byte string (lazy) value.
 parseLBS :: ( MonadBaseControl IO m
             , MonadIO m ) =>
             MonarchT m LBS.ByteString
 parseLBS = recvLBS 4 >>=
            recvLBS . fromIntegral . runGet getWord32be
 
+-- | Parse byte string (strict) value.
 parseBS :: ( MonadBaseControl IO m
            , MonadIO m ) =>
            MonarchT m BS.ByteString
 parseBS = fromLBS <$> parseLBS
 
+-- | Parse Word32 value.
 parseWord32 :: ( MonadBaseControl IO m
                , MonadIO m ) =>
                MonarchT m B.Word32
 parseWord32 = runGet getWord32be <$> recvLBS 4
 
+-- | Parse Int64 value.
 parseInt64 :: ( MonadBaseControl IO m
               , MonadIO m ) =>
               MonarchT m Int64
 parseInt64 = runGet (B.get :: B.Get Int64) <$> recvLBS 8
 
+-- | Parse Double value.
 parseDouble :: ( MonadBaseControl IO m
                , MonadIO m ) =>
                MonarchT m Double
@@ -162,6 +181,7 @@ parseDouble = do
   fract <- fromIntegral <$> parseInt64
   return $ integ + fract * 1e-12
 
+-- | Parse key value pair.
 parseKeyValue :: ( MonadBaseControl IO m
                  , MonadIO m ) =>
                  MonarchT m (BS.ByteString, BS.ByteString)
@@ -174,6 +194,7 @@ parseKeyValue = do
            runGet getWord32be vsiz
   return (fromLBS key, fromLBS value)
 
+-- | Make a query.
 communicate :: ( MonadBaseControl IO m
                , MonadIO m) =>
                B.Put

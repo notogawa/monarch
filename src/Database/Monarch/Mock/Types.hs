@@ -3,7 +3,17 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
--- | Raw definitions.
+-- |
+-- Module      : Database.Monarch.Mock.Types
+-- Copyright   : 2013 Noriyuki OHKAWA
+-- License     : BSD3
+--
+-- Maintainer  : n.ohkawa@gmail.com
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Type definitions.
+--
 module Database.Monarch.Mock.Types
     (
       MockT
@@ -24,12 +34,14 @@ import qualified Data.Map as M
 
 import Database.Monarch.Types ( Code )
 
+-- | KVS Value type
 data TTValue = TTString BS.ByteString
              | TTInt Int
              | TTDouble Double
 
 -- | Connection with TokyoTyrant
-data MockDB = MockDB { mockDB :: M.Map BS.ByteString TTValue }
+data MockDB = MockDB { mockDB :: M.Map BS.ByteString TTValue -- ^ DB
+                     }
 
 -- | The Mock monad transformer to provide TokyoTyrant access.
 newtype MockT m a =
@@ -50,9 +62,11 @@ instance MonadBaseControl base m => MonadBaseControl base (MockT m) where
     liftBaseWith = defaultLiftBaseWith StMMockT
     restoreM = defaultRestoreM unStMMockT
 
+-- | Empty mock DB
 emptyMockDB :: MockDB
 emptyMockDB = MockDB { mockDB = M.empty }
 
+-- | Create mock DB
 newMockDB :: IO (TVar MockDB)
 newMockDB = newTVarIO emptyMockDB
 
