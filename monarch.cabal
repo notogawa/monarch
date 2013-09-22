@@ -54,6 +54,7 @@ test-suite specs
   ghc-options:         -Wall -threaded
   main-is:             Spec.hs
   other-modules:       Database.Monarch.ActionSpec
+                       Database.Monarch.Mock.ActionSpec
   build-depends:       base ==4.*
                      , monarch
                      , bytestring
