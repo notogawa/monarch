@@ -192,7 +192,7 @@ getConnection host port = do
   return $ Connection sock
 
 -- | Monad Monarch interfaces
-class MonadMonarch m where
+class Monad m => MonadMonarch m where
 
   -- | Store a record.
   --   If a record with the same key exists in the database,
@@ -234,9 +234,7 @@ class MonadMonarch m where
                 -> m ()
 
   -- | Remove a record.
-  out :: ( MonadBaseControl IO m
-         , MonadIO m ) =>
-         BS.ByteString -- ^ key
+  out :: BS.ByteString -- ^ key
       -> m ()
 
   -- | Remove records.
