@@ -30,7 +30,7 @@ install:
   - stack --no-terminal --skip-ghc-check install hpc-coveralls
 
 script:
-  - stack --no-terminal --skip-ghc-check test --coverage
+  # - stack --no-terminal --skip-ghc-check test --coverage
   - stack --no-terminal --skip-ghc-check sdist
 
   # check that the generated source-distribution can be built & installed
@@ -43,7 +43,7 @@ script:
   #    exit 1;
   #  fi)
 
-after_script:
-  - hpc-coveralls --exclude-dir=test tests
+#after_script:
+#  - hpc-coveralls --exclude-dir=test tests
 
 # EOF
