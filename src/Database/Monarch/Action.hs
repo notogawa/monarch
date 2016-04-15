@@ -20,9 +20,8 @@ import Data.Maybe
 import qualified Data.Binary as B
 import Data.Binary.Put (putWord32be, putByteString)
 import Data.ByteString.Char8 ()
-import Control.Applicative
 import Control.Monad
-import Control.Monad.Error
+import Control.Monad.Except
 import Control.Monad.Trans.Control
 
 import Database.Monarch.Types
