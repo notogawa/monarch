@@ -15,7 +15,6 @@ addons:
   apt:
     packages:
       - libgmp-dev
-      - tokyotyrant
 before_install:
   # stack
   - mkdir -p ~/.local/bin
@@ -31,8 +30,7 @@ install:
   - stack --no-terminal --skip-ghc-check install hpc-coveralls
 
 script:
-  - stack --no-terminal --skip-ghc-check test --coverage --flag monarch:develop
-  - stack --no-terminal --skip-ghc-check bench --flag monarch:develop
+  - stack --no-terminal --skip-ghc-check test --coverage
   - stack --no-terminal --skip-ghc-check sdist
 
   # check that the generated source-distribution can be built & installed
