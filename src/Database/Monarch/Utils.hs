@@ -31,7 +31,6 @@ import qualified Data.ByteString.Lazy as LBS
 import qualified Data.Binary as B
 import Data.Binary.Put (runPut, putWord32be)
 import Data.Binary.Get (runGet, getWord32be)
-import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 
