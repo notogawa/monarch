@@ -10,7 +10,6 @@ category:            Database
 build-type:          Simple
 cabal-version:       >=1.8
 homepage:            https://github.com/notogawa/monarch
-tested-with:         GHC ==7.4.1, GHC ==7.6.3
 
 source-repository head
   type:                git
@@ -30,7 +29,7 @@ library
                        Database.Monarch.Mock.Types
                        Database.Monarch.Mock.Action
   ghc-options:         -Wall
-  build-depends:       base
+  build-depends:       base ==4.*
                      , mtl
                      , transformers
                      , bytestring
